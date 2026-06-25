@@ -51,6 +51,23 @@
       </repositories>
     </profile>
     <profile>
+      <id>jahia-public-repository</id>
+      <repositories>
+        <repository>
+          <id>jahia-public</id>
+          <name>Jahia Public Repository</name>
+          <url>https://devtools.jahia.com/nexus/content/groups/public</url>
+          <releases>
+            <enabled>true</enabled>
+            <updatePolicy>never</updatePolicy>
+          </releases>
+          <snapshots>
+            <enabled>true</enabled>
+          </snapshots>
+        </repository>
+      </repositories>
+    </profile>
+    <profile>
       <id>sonar</id>
       <activation>
         <activeByDefault>true</activeByDefault>
@@ -63,5 +80,6 @@
   </profiles>
   <activeProfiles>
     <activeProfile>jahia-internal-repository</activeProfile>
+    <activeProfile>jahia-public-repository</activeProfile>
   </activeProfiles>
 </settings>
