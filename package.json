@@ -1,5 +1,5 @@
 {
-  "name": "kfinder",
+  "name": "quickfind",
   "comment-for-name": "do not use kfind for package name otherwise it blocks the rendering of the ui",
   "private": true,
   "type": "module",
@@ -12,14 +12,14 @@
   },
   "dependencies": {
     "@apollo/client": "^3.11.0",
-    "@jahia/moonstone": "^2.17.4",
+    "@jahia/moonstone": "2.19.0",
     "@jahia/ui-extender": "^1.2.0",
     "graphql": "^16.13.1",
     "i18next": "^20.6.1",
     "prop-types": "^15.8.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-i18next": "^11.2.2"
+    "react-i18next": "^11.18.6"
   },
   "devDependencies": {
     "@jahia/eslint-config": "^2.2.0",

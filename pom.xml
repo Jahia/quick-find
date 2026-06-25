@@ -12,47 +12,26 @@
     </parent>
     <groupId>org.jahia.pm.modules</groupId>
     <artifactId>kfind</artifactId>
-    <version>0.7.0-SNAPSHOT</version>
+    <version>0.9.0-SNAPSHOT</version>
     <name>kfind</name>
     <description>Provides a search box to find pages, documents, and features in Jahia.</description>
     <packaging>bundle</packaging>
 
     <properties>
-        <!-- Keep this module as a Jahia OSGi bundle with GraphQL provider integration. -->
-        <!--<require-capability>osgi.extender;filter:="(osgi.extender=org.jahia.bundles.blueprint.extender.config)"</require-capability> -->
-        <!-- jahia-depends declares runtime module prerequisites in Jahia. -->
-        <jahia-depends>default,graphql-dxm-provider</jahia-depends>
-        <!-- Version pins here keep GraphQL APIs aligned across dependencies and imports. -->
+        <jahia-depends>default,graphql-dxm-provider,jcontent</jahia-depends>
         <graphql-dxm-provider.version>3.6.0</graphql-dxm-provider.version>
         <graphql-java-annotations.version>9.1</graphql-java-annotations.version>
-        <!-- Frontend build runs through Maven, so Node must be explicit and reproducible. -->
         <node.version>v22.14.0</node.version>
+        <yarn.build.arguments>yarn build</yarn.build.arguments>
     </properties>
 
-    <repositories>
-        <repository>
-            <id>jahia-public</id>
-            <name>Jahia Public Repository</name>
-            <url>https://devtools.jahia.com/nexus/content/groups/public</url>
-            <releases>
-                <enabled>true</enabled>
-                <updatePolicy>never</updatePolicy>
-            </releases>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
-        </repository>
-    </repositories>
-
     <dependencies>
-        <!-- Provided scope: these libraries are supplied by Jahia at runtime, not bundled in the module. -->
         <dependency>
             <groupId>org.jahia.modules</groupId>
             <artifactId>graphql-dxm-provider</artifactId>
             <version>${graphql-dxm-provider.version}</version>
             <scope>provided</scope>
         </dependency>
-        <!-- GraphQL Java annotations are used to declare custom schema fields in Java code. -->
         <dependency>
             <groupId>io.github.graphql-java</groupId>
             <artifactId>graphql-java-annotations</artifactId>
@@ -62,19 +41,12 @@
     </dependencies>
 
     <build>
-        <resources>
-            <!-- Keep all module resources (JS bundle, configs, i18n, manifests) under src/main/resources. -->
-            <resource>
-                <directory>src/main/resources</directory>
-            </resource>
-        </resources>
         <plugins>
-              <plugin>
+            <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
                 <extensions>true</extensions>
                 <configuration>
-                    <!-- Generate OSGi metadata and ensure DS and GraphQL packages are imported at runtime. -->
                     <instructions>
                         <Bundle-SymbolicName>kfind</Bundle-SymbolicName>
                         <_dsannotations>*</_dsannotations>
@@ -91,17 +63,11 @@
                 <artifactId>maven-clean-plugin</artifactId>
                 <version>3.5.0</version>
                 <configuration>
-                    <!-- Remove generated frontend artifacts so stale files cannot leak into new builds. -->
                     <filesets>
                         <fileset>
                             <directory>src/main/resources/javascript/apps</directory>
                             <includes>
-                                <include>@mf-types/**</include>
-                                <include>assets/**</include>
-                                <include>index.js</include>
-                                <include>index.js.map</include>
-                                <include>remoteEntry.js</include>
-                                <include>package.json</include>
+                                <include>*</include>
                             </includes>
                         </fileset>
                     </filesets>
@@ -112,7 +78,6 @@
                 <artifactId>frontend-maven-plugin</artifactId>
                 <version>1.15.1</version>
                 <configuration>
-                    <!-- Install toolchain under target to avoid machine-global Node/Corepack dependencies. -->
                     <installDirectory>target</installDirectory>
                 </configuration>
                 <executions>
@@ -133,7 +98,6 @@
                         </goals>
                         <phase>generate-resources</phase>
                         <configuration>
-                            <!-- Install JS dependencies during Maven build for CI parity and one-command builds. -->
                             <arguments>yarn install</arguments>
                         </configuration>
                     </execution>
@@ -144,8 +108,7 @@
                         </goals>
                         <phase>generate-resources</phase>
                         <configuration>
-                            <!-- Build and copy frontend assets into src/main/resources/javascript/apps. -->
-                            <arguments>yarn build</arguments>
+                            <arguments>${yarn.build.arguments}</arguments>
                         </configuration>
                     </execution>
                 </executions>
@@ -154,7 +117,6 @@
                 <groupId>org.cyclonedx</groupId>
                 <artifactId>cyclonedx-maven-plugin</artifactId>
                 <version>2.9.1</version>
-                <!-- Generate a CycloneDX SBOM to support dependency traceability and security tooling. -->
                 <executions>
                     <execution>
                         <phase>package</phase>
@@ -184,23 +146,9 @@
     <profiles>
         <profile>
             <id>dev</id>
-            <!-- Dev profile swaps production frontend bundling for a faster development-oriented build. -->
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>com.github.eirslett</groupId>
-                        <artifactId>frontend-maven-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>yarn-build</id>
-                                <configuration>
-                                    <arguments>yarn build:dev</arguments>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
+            <properties>
+                <yarn.build.arguments>yarn build:dev</yarn.build.arguments>
+            </properties>
         </profile>
     </profiles>
 </project>

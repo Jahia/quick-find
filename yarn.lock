@@ -1635,11 +1635,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@jahia/moonstone@npm:^2.17.4":
-  version: 2.17.5
-  resolution: "@jahia/moonstone@npm:2.17.5"
+"@jahia/moonstone@npm:2.19.0":
+  version: 2.19.0
+  resolution: "@jahia/moonstone@npm:2.19.0"
   dependencies:
     "@floating-ui/react": "npm:^0.27.16"
+    "@tanstack/react-table": "npm:^8.21.3"
     clsx: "npm:^2.1.1"
     re-resizable: "npm:^6.11.2"
     to-px: "npm:^1.1.0"
@@ -1647,7 +1648,7 @@ __metadata:
     react: ^18.3.1
     react-dom: ^18.3.1
     react-table: ^7.8.0
-  checksum: 10c0/0d78986b5ae5009f9107cfef3763791e78d1f65ac509bcf4abbdd71bd62ba1b4780016b349bb7c12fd987cd8a2903bbdc09ef06ccd535afcfaf648e01872a943
+  checksum: 10c0/c97d35195b295f1a552a5bc6fcd2ed1b41be048b7b2fad91ca41f7972e49ae6926a5ff684c1ef15611a7f571bf2e16df32426f5bef9f6dd756b7bdce142c45f6
   languageName: node
   linkType: hard
 
@@ -2073,6 +2074,25 @@ __metadata:
   version: 1.1.0
   resolution: "@rtsao/scc@npm:1.1.0"
   checksum: 10c0/b5bcfb0d87f7d1c1c7c0f7693f53b07866ed9fec4c34a97a8c948fb9a7c0082e416ce4d3b60beb4f5e167cbe04cdeefbf6771320f3ede059b9ce91188c409a5b
+  languageName: node
+  linkType: hard
+
+"@tanstack/react-table@npm:^8.21.3":
+  version: 8.21.3
+  resolution: "@tanstack/react-table@npm:8.21.3"
+  dependencies:
+    "@tanstack/table-core": "npm:8.21.3"
+  peerDependencies:
+    react: ">=16.8"
+    react-dom: ">=16.8"
+  checksum: 10c0/85d1d0fcb690ecc011f68a5a61c96f82142e31a0270dcf9cbc699a6f36715b1653fe6ff1518302a6d08b7093351fc4cabefd055a7db3cd8ac01e068956b0f944
+  languageName: node
+  linkType: hard
+
+"@tanstack/table-core@npm:8.21.3":
+  version: 8.21.3
+  resolution: "@tanstack/table-core@npm:8.21.3"
+  checksum: 10c0/40e3560e6d55e07cc047024aa7f83bd47a9323d21920d4adabba8071fd2d21230c48460b26cedf392588f8265b9edc133abb1b0d6d0adf4dae0970032900a8c9
   languageName: node
   linkType: hard
 
@@ -4884,33 +4904,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"kfinder@workspace:.":
-  version: 0.0.0-use.local
-  resolution: "kfinder@workspace:."
-  dependencies:
-    "@apollo/client": "npm:^3.11.0"
-    "@jahia/eslint-config": "npm:^2.2.0"
-    "@jahia/moonstone": "npm:^2.17.4"
-    "@jahia/ui-extender": "npm:^1.2.0"
-    "@jahia/vite-federation-plugin": "npm:^0.1.1"
-    "@types/prop-types": "npm:^15"
-    "@types/react": "npm:^18.3.28"
-    "@types/react-dom": "npm:^18"
-    "@typescript-eslint/eslint-plugin": "npm:^8.51.0"
-    "@typescript-eslint/parser": "npm:^8.51.0"
-    eslint: "npm:^8.57.1"
-    eslint-plugin-json: "npm:^4.0.1"
-    graphql: "npm:^16.13.1"
-    i18next: "npm:^20.6.1"
-    prop-types: "npm:^15.8.1"
-    react: "npm:^18.3.1"
-    react-dom: "npm:^18.3.1"
-    react-i18next: "npm:^11.2.2"
-    typescript: "npm:^5.9.3"
-    vite: "npm:^7.3.1"
-  languageName: unknown
-  linkType: soft
-
 "koa-compose@npm:^4.1.0":
   version: 4.1.0
   resolution: "koa-compose@npm:4.1.0"
@@ -5664,6 +5657,33 @@ __metadata:
   languageName: node
   linkType: hard
 
+"quickfind@workspace:.":
+  version: 0.0.0-use.local
+  resolution: "quickfind@workspace:."
+  dependencies:
+    "@apollo/client": "npm:^3.11.0"
+    "@jahia/eslint-config": "npm:^2.2.0"
+    "@jahia/moonstone": "npm:2.19.0"
+    "@jahia/ui-extender": "npm:^1.2.0"
+    "@jahia/vite-federation-plugin": "npm:^0.1.1"
+    "@types/prop-types": "npm:^15"
+    "@types/react": "npm:^18.3.28"
+    "@types/react-dom": "npm:^18"
+    "@typescript-eslint/eslint-plugin": "npm:^8.51.0"
+    "@typescript-eslint/parser": "npm:^8.51.0"
+    eslint: "npm:^8.57.1"
+    eslint-plugin-json: "npm:^4.0.1"
+    graphql: "npm:^16.13.1"
+    i18next: "npm:^20.6.1"
+    prop-types: "npm:^15.8.1"
+    react: "npm:^18.3.1"
+    react-dom: "npm:^18.3.1"
+    react-i18next: "npm:^11.18.6"
+    typescript: "npm:^5.9.3"
+    vite: "npm:^7.3.1"
+  languageName: unknown
+  linkType: soft
+
 "rambda@npm:^9.1.0":
   version: 9.4.2
   resolution: "rambda@npm:9.4.2"
@@ -5693,7 +5713,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-i18next@npm:^11.2.2":
+"react-i18next@npm:^11.18.6":
   version: 11.18.6
   resolution: "react-i18next@npm:11.18.6"
   dependencies:
