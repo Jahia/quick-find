@@ -81,7 +81,7 @@ export const KFindModal = () => {
     <Modal
       isOpen={isOpen}
       size="full"
-      className={`search-modal ${s.modalWidth}`}
+      className="search-modal"
       data-kfind-modal="true"
       onOpenChange={setIsOpen}
     >
