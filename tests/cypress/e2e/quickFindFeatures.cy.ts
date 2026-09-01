@@ -47,6 +47,8 @@ describe('QuickFind features provider', () => {
         setFeaturesProviderEnabled(true);
         searchInModal('page models');
 
-        cy.get('[data-quick-find-results-section-key="quick-find-features"]', {timeout: MEDIUM_TIMEOUT}).should('be.visible');
+        cy.get('[data-quick-find-results-section-key="quick-find-features"]', {timeout: MEDIUM_TIMEOUT}).should(
+            'be.visible'
+        );
     });
 });

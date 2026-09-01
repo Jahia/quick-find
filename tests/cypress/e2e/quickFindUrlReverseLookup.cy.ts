@@ -35,36 +35,36 @@ describe('QuickFind URL reverse lookup provider', () => {
     it('resolves a direct JCR path query to URL/path match results', () => {
         searchInModal(`/sites/${SITE_KEY}/home/${pageName}`);
 
-        cy.get('[data-quick-find-results-section-key="quick-find-url-reverse-lookup"]', {timeout: MEDIUM_TIMEOUT}).should(
-            'be.visible'
-        );
+        cy.get('[data-quick-find-results-section-key="quick-find-url-reverse-lookup"]', {
+            timeout: MEDIUM_TIMEOUT
+        }).should('be.visible');
         cy.get('[data-quick-find-panel="true"]').contains(pageTitle, {timeout: MEDIUM_TIMEOUT});
     });
 
     it('resolves a short URL-like path to the page under /home', () => {
         searchInModal(`/${pageName}`);
 
-        cy.get('[data-quick-find-results-section-key="quick-find-url-reverse-lookup"]', {timeout: MEDIUM_TIMEOUT}).should(
-            'be.visible'
-        );
+        cy.get('[data-quick-find-results-section-key="quick-find-url-reverse-lookup"]', {
+            timeout: MEDIUM_TIMEOUT
+        }).should('be.visible');
         cy.get('[data-quick-find-panel="true"]').contains(pageTitle, {timeout: MEDIUM_TIMEOUT});
     });
 
     it('resolves a full URL that includes a locale prefix in the path', () => {
         searchInModal('https://pmdemo-jahiapm.internal.cloud.jahia.com/fr/home/buy.html');
 
-        cy.get('[data-quick-find-results-section-key="quick-find-url-reverse-lookup"]', {timeout: MEDIUM_TIMEOUT}).should(
-            'be.visible'
-        );
+        cy.get('[data-quick-find-results-section-key="quick-find-url-reverse-lookup"]', {
+            timeout: MEDIUM_TIMEOUT
+        }).should('be.visible');
         cy.get('[data-quick-find-panel="true"]').contains(`/home/${localePathPageName}`, {timeout: MEDIUM_TIMEOUT});
     });
 
     it('resolves a full URL under /home without /sites/{siteKey}', () => {
         searchInModal('https://pmdemo-jahiapm.internal.cloud.jahia.com/home/luxe-title.html');
 
-        cy.get('[data-quick-find-results-section-key="quick-find-url-reverse-lookup"]', {timeout: MEDIUM_TIMEOUT}).should(
-            'be.visible'
-        );
+        cy.get('[data-quick-find-results-section-key="quick-find-url-reverse-lookup"]', {
+            timeout: MEDIUM_TIMEOUT
+        }).should('be.visible');
         cy.get('[data-quick-find-panel="true"]').contains(`/home/${homePathPageName}`, {timeout: MEDIUM_TIMEOUT});
     });
 
@@ -73,9 +73,9 @@ describe('QuickFind URL reverse lookup provider', () => {
         () => {
             searchInModal(buildVanityLookupUrl(`/${pageName}`));
 
-            cy.get('[data-quick-find-results-section-key="quick-find-url-reverse-lookup"]', {timeout: MEDIUM_TIMEOUT}).should(
-                'be.visible'
-            );
+            cy.get('[data-quick-find-results-section-key="quick-find-url-reverse-lookup"]', {
+                timeout: MEDIUM_TIMEOUT
+            }).should('be.visible');
             cy.get('[data-quick-find-panel="true"]').contains(pageTitle, {timeout: MEDIUM_TIMEOUT});
         }
     );
