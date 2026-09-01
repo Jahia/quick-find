@@ -3,6 +3,16 @@
   bottom: 32px;
   height: auto;
   max-height: none;
+  /* Width must live in this two-class selector: a single-class rule ties with
+     moonstone's modal_full { width: 100% } and loses on source order. */
+  width: min(800px, calc(100vw - 96px));
+}
+
+/* Moonstone gives the modal overlay no z-index while the collapsed primary nav
+   is fixed at z-index 1, so the nav rail paints over the open modal. 8000 stays
+   below moonstone menus (8500+) so portaled dropdowns still show above us. */
+:global(.moonstone-modal_overlay:has(.search-modal)) {
+  z-index: 8000;
 }
 
 :global(.search-modal .moonstone-modal_body) {
@@ -10,10 +20,6 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
-}
-
-.modalWidth {
-  width: 800px;
 }
 
 .content {
