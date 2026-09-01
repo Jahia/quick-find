@@ -78,52 +78,52 @@ export const KFindModal = () => {
   }
 
   return (
-    <Modal
+      <Modal
       isOpen={isOpen}
       size="full"
       className={`search-modal ${s.modalWidth}`}
       data-kfind-modal="true"
       onOpenChange={setIsOpen}
-    >
-      <>
-        <div className={s.content}>
-          <ApolloProvider client={apolloClient}>
-            <KFindPanel focusOnField onNavigate={() => setIsOpen(false)} />
-          </ApolloProvider>
-        </div>
-        <ModalFooter>
-          <div className={s.footerLayout}>
-            <div className={s.footerHints}>
-              <Typography variant="caption">
-                {t(
+      >
+          <>
+              <div className={s.content}>
+                  <ApolloProvider client={apolloClient}>
+                      <KFindPanel focusOnField onNavigate={() => setIsOpen(false)}/>
+                  </ApolloProvider>
+              </div>
+              <ModalFooter>
+                  <div className={s.footerLayout}>
+                      <div className={s.footerHints}>
+                          <Typography variant="caption">
+                              {t(
                   "search.modal.hint",
                   "Press Ctrl+K or ⌘K to open · Esc to close · Tab to navigate · Enter to go · E to edit",
                 )}
-              </Typography>
-              <Typography variant="caption">
-                {t(
+                          </Typography>
+                          <Typography variant="caption">
+                              {t(
                   "search.modal.reportIssuePrefix",
                   "Report bugs and improvements at",
                 )}{" "}
-                <a
+                              <a
                   className={s.issueLink}
                   href="https://github.com/Jahia/kfind/issues"
                   target="_blank"
                   rel="noreferrer"
-                >
-                  https://github.com/Jahia/kfind/issues
-                </a>
-              </Typography>
-            </div>
-            {/* Build time shown only in dev builds */}
-            {import.meta.env.DEV && (
-              <Typography variant="caption" style={{ opacity: 0.4 }}>
-                {window.contextJsParameters.kfind?.buildTime ?? ""}
-              </Typography>
+                              >
+                                  https://github.com/Jahia/kfind/issues
+                              </a>
+                          </Typography>
+                      </div>
+                      {/* Build time shown only in dev builds */}
+                      {import.meta.env.DEV && (
+                      <Typography variant="caption" style={{ opacity: 0.4 }}>
+                          {window.contextJsParameters.kfind?.buildTime ?? ""}
+                      </Typography>
             )}
-          </div>
-        </ModalFooter>
-      </>
-    </Modal>
+                  </div>
+              </ModalFooter>
+          </>
+      </Modal>
   );
 };

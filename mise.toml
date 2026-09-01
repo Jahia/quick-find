@@ -1,5 +1,5 @@
 [tools]
 java = "temurin-17"
 node = "22"
-yarn = "4"
+yarn = "4.13.0"
 maven = "3"

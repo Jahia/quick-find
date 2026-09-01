@@ -7,6 +7,7 @@ import 'cypress-wait-until';
 // Augment Cypress's global Chainable type so TypeScript recognizes
 // custom commands added in this file (e.g. cy.visitJContentPage()).
 declare global {
+    // eslint-disable-next-line @typescript-eslint/no-namespace
     namespace Cypress {
         interface Chainable {
             visitJContentPage(siteKey: string, language?: string, app?: string): Chainable<void>;
