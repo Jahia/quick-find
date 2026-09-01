@@ -20,7 +20,7 @@ export const RESULT_ROW_SELECTOR = '[data-kfind-result-row="true"][tabindex]';
 export const SHOW_MORE_SELECTOR = '[data-kfind-show-more="true"]';
 export const SEARCH_INPUT_SELECTOR = '[data-kfind-search-input-wrapper="true"] input[type="search"]';
 
-const GQL_AUTH = () => ({user: 'root', pass: Cypress.env('SUPER_USER_PASSWORD')});
+const gqlAuth = () => ({user: 'root', pass: Cypress.env('SUPER_USER_PASSWORD')});
 
 const ADD_NODE_MUTATION = `
 mutation addNode($parentPathOrId: String!, $name: String!, $primaryNodeType: String!, $properties: [InputJCRProperty], $mixins: [String]) {
@@ -31,7 +31,7 @@ mutation addNode($parentPathOrId: String!, $name: String!, $primaryNodeType: Str
     }
 }`;
 
-// jnt:file requires a mandatory jcr:content child (jnt:resource) with both
+// A jnt:file requires a mandatory jcr:content child (jnt:resource) with both
 // jcr:mimeType and jcr:data. The $file variable is the form-field key name;
 // Jahia resolves the binary from that field in the multipart body.
 const UPLOAD_FILE_MUTATION = `
@@ -176,7 +176,7 @@ const gqlRequest = (body: Record<string, unknown>): Cypress.Chainable<GraphQLRes
                 'Content-Type': 'application/json',
                 Origin: Cypress.config('baseUrl')
             },
-            auth: GQL_AUTH(),
+            auth: gqlAuth(),
             body
         })
         .then(
@@ -201,7 +201,7 @@ const waitForNodeByPath = (path: string, timeoutMs = LONG_TIMEOUT, intervalMs = 
                     assertNoGraphQLErrors(result, `GraphQL errors while waiting for node ${path}`);
                 }
 
-                return !!result?.data?.jcr?.nodeByPath?.uuid;
+                return Boolean(result?.data?.jcr?.nodeByPath?.uuid);
             }),
         {
             timeout: timeoutMs,
@@ -337,11 +337,11 @@ export const openSearchModal = () => {
 
         cy.log('[openSearchModal] Trying custom event + keyboard shortcut');
         cy.window().then(win => {
-            const dispatchOpenEvent = (target: any) => {
+            const dispatchOpenEvent = (target: Window & typeof globalThis) => {
                 target.dispatchEvent(new target.CustomEvent('kfind:open-search'));
             };
 
-            const dispatchOpenShortcut = (targetWindow: any) => {
+            const dispatchOpenShortcut = (targetWindow: Window & typeof globalThis) => {
                 const evt = new targetWindow.KeyboardEvent('keydown', {
                     key: 'k',
                     ctrlKey: true,
@@ -356,7 +356,7 @@ export const openSearchModal = () => {
             dispatchOpenShortcut(win);
 
             try {
-                const parentWindow = (win as any).parent;
+                const parentWindow = win.parent as Window & typeof globalThis;
                 if (parentWindow && parentWindow !== win) {
                     dispatchOpenEvent(parentWindow);
                     dispatchOpenShortcut(parentWindow);
@@ -524,7 +524,7 @@ const uploadFile = (parentPathOrId: string, name: string): Cypress.Chainable<Gra
                 'Content-Type': `multipart/form-data; boundary=${boundary}`,
                 Origin: Cypress.config('baseUrl')
             },
-            auth: GQL_AUTH(),
+            auth: gqlAuth(),
             body
         })
         .then(
@@ -543,7 +543,7 @@ export const createMediaViaGraphql = (siteKey: string, fileName: string) =>
         )
     );
 
-// kfindtest:mainResource (defined in the kfind-test-module CND) extends
+// The kfindtest:mainResource type (defined in the kfind-test-module CND) extends
 // jnt:content + jmix:mainResource. It cannot be placed under jnt:contentFolder
 // — only under jnt:page (e.g. /home). The kfind main-resources provider
 // searches site-wide via pathType: ANCESTOR, so location doesn't affect results.
