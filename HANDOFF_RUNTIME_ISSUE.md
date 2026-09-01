@@ -1,12 +1,12 @@
-# kfind Runtime Crash Handoff
+# quick-find Runtime Crash Handoff
 
 ## Objective
 
-Fix fatal runtime crashes in Jahia administration page load after deploying the kfind module.
+Fix fatal runtime crashes in Jahia administration page load after deploying the quick-find module.
 
 ## Environment
 
-- Workspace: kfind
+- Workspace: quick-find
 - Target URL: /jahia/administration/manageModules
 - Runtime context: Jahia with many federated modules loaded at once
 - Build and deploy path works reliably
@@ -29,7 +29,7 @@ Typical stack shape:
 
 - serverSettings loadShare chunk
 - jcontent chunk usage
-- then kfind bundle entry chunk
+- then quick-find bundle entry chunk
 
 There are many federation warnings about unsatisfied singleton versions across the platform, especially around React, react-i18next, i18next, moonstone, redux, and others.
 
@@ -37,18 +37,18 @@ There are many federation warnings about unsatisfied singleton versions across t
 
 **Dual React instance caused by Vite federation pre-building.**
 
-The `@module-federation/vite` plugin (used internally by `@jahia/vite-federation-plugin`) pre-builds full bundled copies of every shared dependency as fallback libraries. This means kfind ships its own complete copy of React (~134KB), even when the intent is to use the host's React.
+The `@module-federation/vite` plugin (used internally by `@jahia/vite-federation-plugin`) pre-builds full bundled copies of every shared dependency as fallback libraries. This means quick-find ships its own complete copy of React (~134KB), even when the intent is to use the host's React.
 
-When the webpack app-shell initializes kfind's remote, it populates the shared scope. kfind's React entry has `lib: function` (a bundled fallback), making it a viable provider. If kfind's entry wins the singleton version negotiation (e.g., same version 18.3.1 as the host → tie-breaking favors kfind), the platform uses kfind's bundled React instead of the host's. This creates two React instances: one rendering the component tree, another providing the hooks dispatcher → null dispatcher → crash.
+When the webpack app-shell initializes quick-find's remote, it populates the shared scope. quick-find's React entry has `lib: function` (a bundled fallback), making it a viable provider. If quick-find's entry wins the singleton version negotiation (e.g., same version 18.3.1 as the host → tie-breaking favors quick-find), the platform uses quick-find's bundled React instead of the host's. This creates two React instances: one rendering the component tree, another providing the hooks dispatcher → null dispatcher → crash.
 
 ### Diagnostic Evidence
 
 Inspecting `__FEDERATION__.__INSTANCES__` at runtime revealed:
 
-- **kfind** shared entries for react/react-dom have `lib: function` (bundled fallback exists)
+- **quick-find** shared entries for react/react-dom have `lib: function` (bundled fallback exists)
 - **copy-to-other-languages** (a working module) shared entries have `lib: undefined` (no bundled fallback)
 
-The `lib` property is the smoking gun. Modules with `lib: undefined` can only consume from the host — they never become providers. kfind's `lib: function` makes it a potential provider, and when it wins negotiation, the dual-instance crash occurs.
+The `lib` property is the smoking gun. Modules with `lib: undefined` can only consume from the host — they never become providers. quick-find's `lib: function` makes it a potential provider, and when it wins negotiation, the dual-instance crash occurs.
 
 ### How Vite Federation Pre-Building Works
 
@@ -107,7 +107,7 @@ The `lib` property is the smoking gun. Modules with `lib: undefined` can only co
 #### 9) import: false without singleton
 
 - Set `{ import: false }` without `singleton: true`
-- Result: webpack treated entries as separate instances, calling kfind's `get()` which threw
+- Result: webpack treated entries as separate instances, calling quick-find's `get()` which threw
 - Root cause: Jahia plugin's shallow merge — `{ import: false }` REPLACED `{ singleton: true }` entirely instead of merging
 
 #### 10) singleton: true + import: false
@@ -125,7 +125,7 @@ The `lib` property is the smoking gun. Modules with `lib: undefined` can only co
 
 - Post-build Vite plugin replacing throw statements with `return ()=>{}`
 - Result: `"Cannot read properties of undefined (reading 'Component')"` from `security-filter-tools`
-- Root cause: kfind's empty factory wins singleton negotiation (same version as host), providing `{}` as React to ALL consumers on the platform. The fix broke other modules.
+- Root cause: quick-find's empty factory wins singleton negotiation (same version as host), providing `{}` as React to ALL consumers on the platform. The fix broke other modules.
 
 ## Key Technical Details
 
@@ -160,13 +160,13 @@ When the webpack app-shell loads a remote:
 3. During step 1, webpack's `consumes` handler walks ALL entries and calls their `get()` to populate the share scope
 4. If any `get()` throws, the page fails to load
 
-## Runtime Share Scope Analysis (kfind undeployed, working state)
+## Runtime Share Scope Analysis (quick-find undeployed, working state)
 
 Inspected `__FEDERATION__.__INSTANCES__` and `shareScopeMap` on `/jahia/administration/iso-luxe/settings/properties`.
 
 ### Federation Instances Present
 
-Only two federation instances when kfind is undeployed:
+Only two federation instances when quick-find is undeployed:
 1. `@jahia/copy-to-other-languages` — Vite-built module, 12 shared keys
 2. `__mfe_internal__@jahia/server-settings` — webpack-built module, 9 shared keys
 
@@ -200,9 +200,9 @@ React 18.3.1 with `hasLib: true` is listed as `from: "@jahia/copy-to-other-langu
 ### copy-to-other-languages Build Setup
 
 From GitHub (Jahia/copy-to-other-languages):
-- Uses `@jahia/vite-federation-plugin: ^0.1.0` (kfind uses `^0.1.1`)
+- Uses `@jahia/vite-federation-plugin: ^0.1.0` (quick-find uses `^0.1.1`)
 - Passes NO custom `shared` config — only `exposes` and plugin defaults
-- react/react-dom are in `dependencies` (same as kfind)
+- react/react-dom are in `dependencies` (same as quick-find)
 - The 0.1.0 plugin version may lack the auto-share-from-dependencies logic, OR it generates entries WITHOUT pre-built fallbacks
 
 ### The Provider/Consumer Duality
@@ -224,14 +224,14 @@ It works because **version negotiation prevents it from ever winning**:
 - copy-to-other-languages' `get()` for react is NEVER called
 - copy-to-other-languages' `loadShare("react")` resolves to the host's 18.3.1
 
-### Why kfind Crashes (Version Tie)
+### Why quick-find Crashes (Version Tie)
 
-kfind declares react **18.3.1** — the SAME version as the host. When two entries have the same version:
-- The tie-breaking favors kfind's entry (possibly by registration order)
-- kfind's `get()` is called, returning either a separate React instance (pre-built) or an empty factory (patched)
+quick-find declares react **18.3.1** — the SAME version as the host. When two entries have the same version:
+- The tie-breaking favors quick-find's entry (possibly by registration order)
+- quick-find's `get()` is called, returning either a separate React instance (pre-built) or an empty factory (patched)
 - Either outcome breaks the platform
 
-### copy-to-other-languages vs kfind Bundle Comparison
+### copy-to-other-languages vs quick-find Bundle Comparison
 
 **copy-to-other-languages react shared entry:**
 ```javascript
@@ -244,7 +244,7 @@ kfind declares react **18.3.1** — the SAME version as the host. When two entri
  }}
 ```
 
-**kfind react shared entry (with import:false + patch):**
+**quick-find react shared entry (with import:false + patch):**
 ```javascript
 {name:"react", version:"18.3.1", ...,
  async get(){return ()=>{}},             // empty factory — provides {} as React
@@ -257,7 +257,7 @@ There is a fundamental incompatibility between:
 - **Vite federation's `import: false`**: designed for Vite-to-Vite federation where `loadShare()` resolves from the runtime's share scope without ever calling `get()`
 - **Webpack federation's `consumes`**: always calls `get()` on every shared entry to populate the scope, expecting a factory function
 
-However, this gap is irrelevant IF the version negotiation prevents the Vite module from ever winning. The real fix is to ensure kfind's shared entry versions are LOWER than the host's, matching copy-to-other-languages' pattern.
+However, this gap is irrelevant IF the version negotiation prevents the Vite module from ever winning. The real fix is to ensure quick-find's shared entry versions are LOWER than the host's, matching copy-to-other-languages' pattern.
 
 ## Recommended Fix
 
@@ -268,9 +268,9 @@ However, this gap is irrelevant IF the version negotiation prevents the Vite mod
 3. Remove the `patchSharedGetThrows` plugin entirely
 4. Let the Jahia plugin auto-share everything from `dependencies` as `{ singleton: true }`
 
-**Result**: kfind's react 18.2.0 entry has a real `get()` with a pre-built bundle. The host's 18.3.1 always wins negotiation, so kfind's `get()` is never called. kfind's `loadShare("react")` resolves to the host's 18.3.1. This matches exactly what copy-to-other-languages does.
+**Result**: quick-find's react 18.2.0 entry has a real `get()` with a pre-built bundle. The host's 18.3.1 always wins negotiation, so quick-find's `get()` is never called. quick-find's `loadShare("react")` resolves to the host's 18.3.1. This matches exactly what copy-to-other-languages does.
 
-**Risk**: If the platform ever downgrades react below 18.2.0, kfind would become the provider. Very unlikely since the platform is moving to higher versions.
+**Risk**: If the platform ever downgrades react below 18.2.0, quick-find would become the provider. Very unlikely since the platform is moving to higher versions.
 
 ### Alternative: Use version override in shared config
 
@@ -281,7 +281,7 @@ shared: {
   "react-dom": { singleton: true, version: "0.0.0" },
 }
 ```
-This ensures kfind NEVER wins version negotiation regardless of the actual dependency version. Keep `import: false` and the patch plugin as safety nets.
+This ensures quick-find NEVER wins version negotiation regardless of the actual dependency version. Keep `import: false` and the patch plugin as safety nets.
 
 ## Resolution: version: "0.0.0" Override
 
@@ -291,7 +291,7 @@ The fix that resolved the page-load crash:
 
 1. **Removed `import: false`** from all shared entries — let the Vite plugin generate pre-built bundles normally (real factories, not empty/throwing ones)
 2. **Removed the `patchSharedGetThrows` plugin** — no longer needed
-3. **Set `version: "0.0.0"`** for all host-provided deps so kfind NEVER wins singleton negotiation
+3. **Set `version: "0.0.0"`** for all host-provided deps so quick-find NEVER wins singleton negotiation
 
 This produces shared entries with real `get()` factories (matching copy-to-other-languages' pattern) but version 0.0.0, which always loses to the host's higher versions. The host's React is always selected.
 
@@ -299,12 +299,12 @@ This produces shared entries with real `get()` factories (matching copy-to-other
 
 Several source files had been modified during prior investigation and needed to be restored from the GitHub `main` branch:
 
-- **`src/javascript/kfind/routes.tsx`** — Had been changed to use `window.jahia?.i18n` instead of `import i18n from "i18next"`. The `mountModal()` function had an early return if `window.jahia.i18n` was undefined, silently preventing the modal from ever mounting. **This was why the search modal didn't appear even after the crash was fixed.**
-- **`src/javascript/kfind-providers/features/register.ts`** — Had been changed to use `window.jahia?.i18n?.t` instead of `import i18n from "i18next"`. Restored.
+- **`src/javascript/quick-find/routes.tsx`** — Had been changed to use `window.jahia?.i18n` instead of `import i18n from "i18next"`. The `mountModal()` function had an early return if `window.jahia.i18n` was undefined, silently preventing the modal from ever mounting. **This was why the search modal didn't appear even after the crash was fixed.**
+- **`src/javascript/quick-find-providers/features/register.ts`** — Had been changed to use `window.jahia?.i18n?.t` instead of `import i18n from "i18next"`. Restored.
 - **`src/javascript/globals.d.ts`** — Had extra `i18n` type declarations added for `window.jahia.i18n`. Restored.
 
-To restore: `git checkout HEAD -- src/javascript/globals.d.ts src/javascript/kfind-providers/features/register.ts`
-For routes.tsx: compared against `https://raw.githubusercontent.com/Jahia/kfind/main/src/javascript/kfind/routes.tsx` and restored.
+To restore: `git checkout HEAD -- src/javascript/globals.d.ts src/javascript/quick-find-providers/features/register.ts`
+For routes.tsx: compared against `https://raw.githubusercontent.com/Jahia/quick-find/main/src/javascript/quick-find/routes.tsx` and restored.
 
 ### Current Working vite.config.ts
 
@@ -344,13 +344,13 @@ After deploying this config:
 - Page loads successfully on `/jahia/administration/manageModules` — no crash
 - Page loads successfully on `/jahia/administration/iso-luxe/settings/properties` — no crash
 - Zero console errors
-- kfind federation instance loads with react version "0.0.0", `hasLib: false`, `loaded: false`
-- kfind registers 8 entries in the Jahia registry (6 providers, 1 nav item, 1 callback)
-- The `kfind is activated` debug message fires on site-scoped pages where kfind is installed
+- quick-find federation instance loads with react version "0.0.0", `hasLib: false`, `loaded: false`
+- quick-find registers 8 entries in the Jahia registry (6 providers, 1 nav item, 1 callback)
+- The `quick-find is activated` debug message fires on site-scoped pages where quick-find is installed
 
-### kfind Search UI — RESOLVED (2026-06-25)
+### quick-find Search UI — RESOLVED (2026-06-25)
 
-**Fix shipped:** `src/javascript/kfind/routes.tsx` now unwraps the i18next default
+**Fix shipped:** `src/javascript/quick-find/routes.tsx` now unwraps the i18next default
 import to the real instance before handing it to `<I18nextProvider>`:
 
 ```tsx
@@ -362,7 +362,7 @@ const i18n =
 ```
 
 Verified on the live `iso-luxe/settings/properties` page after deploy: the modal opens
-via the nav Search button, Cmd+K, and Ctrl+K; translations render ("Welcome to kfind",
+via the nav Search button, Cmd+K, and Ctrl+K; translations render ("Welcome to quick-find",
 footer hints, etc.); zero console errors.
 
 ---
@@ -371,10 +371,10 @@ footer hints, etc.); zero console errors.
 
 **Confirmed via live browser inspection (Claude-in-Chrome, tab on iso-luxe properties page):**
 
-1. The callback `kfind` and nav item `kfind-search` are both correctly registered in the registry (`requireModuleInstalledOnSite: "kfind"`, targets correct).
-2. `mountModal()` DOES run — the `#kfind-search-modal` container div is created and a React root is attached (`__reactContainer$...`).
-3. BUT the React root commits **empty** — walking `fiberRoot.current.child` finds zero function components. The `<I18nextProvider><KFindModal/></I18nextProvider>` tree **throws during render**, React unmounts it (no error boundary), leaving an empty container. No effect runs → no `keydown`/`kfind:open-search` listener attaches → clicking/Cmd+K do nothing.
-4. Dispatching `kfind:open-search` on `window` fires (probe confirmed) but has no handler.
+1. The callback `quick-find` and nav item `quick-find-search` are both correctly registered in the registry (`requireModuleInstalledOnSite: "quick-find"`, targets correct).
+2. `mountModal()` DOES run — the `#quick-find-search-modal` container div is created and a React root is attached (`__reactContainer$...`).
+3. BUT the React root commits **empty** — walking `fiberRoot.current.child` finds zero function components. The `<I18nextProvider><QuickFindModal/></I18nextProvider>` tree **throws during render**, React unmounts it (no error boundary), leaving an empty container. No effect runs → no `keydown`/`quick-find:open-search` listener attaches → clicking/Cmd+K do nothing.
+4. Dispatching `quick-find:open-search` on `window` fires (probe confirmed) but has no handler.
 
 **The render error (captured by intercepting console.error + window.onerror while re-invoking the callback):**
 ```
@@ -382,7 +382,7 @@ TypeError: o.on is not a function
   at .../serverSettings/.../_virtual_mf_..._loadShare__react_mf_2_i18next__loadShare__.mjs
   at .../serverSettings/.../_virtual_mf_..._loadShare___mf_0_jahia_mf_1_moonstone__loadShare__.mjs
 ```
-This is react-i18next calling `i18n.on('languageChanged', ...)` on an i18n instance that lacks `.on`. The throw is inside **Moonstone's** react-i18next usage (Moonstone `<Modal>` is rendered by kfind), react-i18next version **17.0.8** (provided by copy-to-other-languages).
+This is react-i18next calling `i18n.on('languageChanged', ...)` on an i18n instance that lacks `.on`. The throw is inside **Moonstone's** react-i18next usage (Moonstone `<Modal>` is rendered by quick-find), react-i18next version **17.0.8** (provided by copy-to-other-languages).
 
 **Resolved share-scope versions (from `window.__FEDERATION__.__SHARE__`):**
 - `react-i18next` loaded = **17.0.8** (from `@jahia/copy-to-other-languages`); quickfind's `^11.18.6` entry is NOT loaded.
@@ -394,11 +394,11 @@ This is react-i18next calling `i18n.on('languageChanged', ...)` on an i18n insta
 - HOWEVER, the shared `i18next` instance resolved directly from the federation share scope (quickfind scope, via `entry.get()`) DOES have `.on` and `.t` (both functions). So `import i18n from "i18next"` *should* resolve to a valid instance with `.on`.
 
 **Open contradiction to resolve tomorrow:** the shared i18next instance has `.on`, yet react-i18next throws `o.on is not a function`. Hypotheses to test next session:
-  1. `import i18n from "i18next"` inside the quickfind bundle resolves to the ES module *namespace* (`{default: instance}`) rather than the instance itself, so `i18n.on` is undefined while `i18n.default.on` exists — i.e. an interop/`__esModule` default-unwrapping mismatch in the Vite-federation `loadShare` for i18next. Check what kfind's built bundle actually binds for `import i18n from "i18next"`.
-  2. The `o` that throws is the i18n Moonstone pulls from React context (the one kfind passed to `<I18nextProvider i18n={i18n}>`). If kfind passes the namespace object, Moonstone's react-i18next 17 calls `.on` on it → throws. Verify by logging the actual value kfind passes.
+  1. `import i18n from "i18next"` inside the quickfind bundle resolves to the ES module *namespace* (`{default: instance}`) rather than the instance itself, so `i18n.on` is undefined while `i18n.default.on` exists — i.e. an interop/`__esModule` default-unwrapping mismatch in the Vite-federation `loadShare` for i18next. Check what quick-find's built bundle actually binds for `import i18n from "i18next"`.
+  2. The `o` that throws is the i18n Moonstone pulls from React context (the one quick-find passed to `<I18nextProvider i18n={i18n}>`). If quick-find passes the namespace object, Moonstone's react-i18next 17 calls `.on` on it → throws. Verify by logging the actual value quick-find passes.
   3. react-i18next 17 (cotl) vs the i18next instance interplay — possibly initReactI18next was never run against this i18n, but `.on` missing points more to #1/#2.
 
-**Likely fix direction (validate before applying):** ensure kfind passes a real i18next *instance* to `I18nextProvider`. Either:
+**Likely fix direction (validate before applying):** ensure quick-find passes a real i18next *instance* to `I18nextProvider`. Either:
   - unwrap default explicitly, or
   - use `window.jahia.i18n` only if it's a full instance (it is NOT — lacks `.on`), or
   - get the instance via `react-i18next`'s `getI18n()` / `useTranslation().i18n` instead of importing i18next directly, or
@@ -421,18 +421,18 @@ Live runtime inspection (`window.__FEDERATION__.__SHARE__` + the deployed loadSh
 - Because Jahia's shared i18next module has **no `__esModule` marker**, the Vite-federation
   loadShare glue (`const n = o.__esModule ? o.default : o`) leaves `import i18n from "i18next"`
   equal to the **namespace** (no `.on`) instead of unwrapping to `.default`.
-- kfind's `routes.tsx` then did `<I18nextProvider i18n={i18n}>` with that namespace object.
+- quick-find's `routes.tsx` then did `<I18nextProvider i18n={i18n}>` with that namespace object.
   Moonstone components inside the modal (`<Modal>`) call `useTranslation()`, which reads the
   i18n from context and runs `i18n.on('languageChanged', …)` during render →
   **`TypeError: o.on is not a function`**. React unmounts the whole modal subtree (no error
-  boundary) → empty container, no `keydown`/`kfind:open-search` listeners attach → the nav
+  boundary) → empty container, no `keydown`/`quick-find:open-search` listeners attach → the nav
   button and ⌘K/Ctrl+K silently do nothing.
 
 **Empirical proof:** monkey-patching `window.jahia.i18n` to delegate `.on`/`.off`/`.store`
 to its `.default` and re-running the mount produced zero errors and a visible modal — the
 missing `.on` was the *sole* cause.
 
-**Fix shipped** in `src/javascript/kfind/routes.tsx` — unwrap to the real instance before
+**Fix shipped** in `src/javascript/quick-find/routes.tsx` — unwrap to the real instance before
 passing it to the provider (and it doubles as a guard for environments where the import is
 already a live instance):
 
@@ -450,13 +450,13 @@ modal opens via nav button + ⌘K + Ctrl+K, translations render, no console erro
 
 ### (original) Remaining note
 
-The kfind module needs to be installed/enabled on the specific site (via `requireModuleInstalledOnSite: "kfind"`) for the callback to fire and the search modal to mount. The nav button renders globally but the callback (which mounts the modal and enables Cmd+K) only runs in site context where kfind is deployed. Verify kfind is enabled on the ISO Luxe site via Administration > Sites > ISO Luxe > Modules.
+The quick-find module needs to be installed/enabled on the specific site (via `requireModuleInstalledOnSite: "quick-find"`) for the callback to fire and the search modal to mount. The nav button renders globally but the callback (which mounts the modal and enables Cmd+K) only runs in site context where quick-find is deployed. Verify quick-find is enabled on the ISO Luxe site via Administration > Sites > ISO Luxe > Modules.
 
 ## Build Notes
 
 - Node version: must use Node 22 via `eval "$(mise activate bash)"` (Vite requires Node 20.19+)
 - Maven clean can fail on macOS due to xattr/DS_Store; use `xattr -cr target && find target -name '.DS_Store' -delete && rm -rf target` before `mvn install`
-- Working directory must be `/Users/romaingauthier/dev/git/kfind` (not the jackrabbit parent)
+- Working directory must be `/Users/romaingauthier/dev/git/quick-find` (not the jackrabbit parent)
 
 ## Quick Repro (Before Fix)
 
@@ -467,5 +467,5 @@ The kfind module needs to be installed/enabled on the specific site (via `requir
 ## Outcome
 
 **RESOLVED.** The crash was caused by two issues:
-1. **Version tie in singleton negotiation** — kfind declared react 18.3.1 (same as host), winning the tie and providing its own bundled React instead of the host's. Fixed by setting `version: "0.0.0"` for all host-provided shared deps.
+1. **Version tie in singleton negotiation** — quick-find declared react 18.3.1 (same as host), winning the tie and providing its own bundled React instead of the host's. Fixed by setting `version: "0.0.0"` for all host-provided shared deps.
 2. **Modified source files** — `routes.tsx` and `features/register.ts` had been changed to use `window.jahia.i18n` instead of `import i18n from "i18next"`, silently breaking the modal mount. Fixed by restoring from GitHub `main`.

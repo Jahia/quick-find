@@ -13,7 +13,7 @@ All notable user-visible changes to this module should be documented in this fil
 ### Fixed
 
 - Fixed the admin page-load crash caused by Module Federation singleton version
-  negotiation: kfind no longer wins the shared-React negotiation (`version: "0.0.0"`
+  negotiation: quick-find no longer wins the shared-React negotiation (`version: "0.0.0"`
   overrides in `vite.config.ts`), so the host's React is always used.
 - Fixed the search modal never opening (nav Search button and ⌘K/Ctrl+K doing nothing).
   Jahia's shared i18next default import resolves to the module *namespace* (which lacks

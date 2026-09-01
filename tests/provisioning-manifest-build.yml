@@ -2,7 +2,7 @@
   username: 'NEXUS_USERNAME'
   password: 'NEXUS_PASSWORD'
 - installBundle:
-      - 'mvn:org.jahia.pm.modules/kfind'
-      - 'file:./artifacts/kfind-test-module-*.jar'
+      - 'mvn:org.jahia.pm.modules/quick-find'
+      - 'file:./artifacts/quick-find-test-module-*.jar'
   autoStart: true
   uninstallPreviousVersion: true

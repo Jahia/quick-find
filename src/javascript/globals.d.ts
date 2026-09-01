@@ -6,9 +6,9 @@ declare interface Window {
     uilang?: string;
     lang?: string;
     siteKey?: string;
-    /** Populated server-side by reading org.jahia.pm.modules.kfind.cfg */
-    kfind?: {
-      /** Server-rendered build/request timestamp from kfind.jsp. */
+    /** Populated server-side by reading org.jahia.pm.modules.quickfind.cfg */
+    quickFind?: {
+      /** Server-rendered build/request timestamp from quickFind.jsp. */
       buildTime?: string;
       /** Minimum characters before a content search query is fired. Default: 3. */
       minSearchChars?: number;
@@ -70,7 +70,7 @@ declare interface Window {
   };
 }
 
-// Build time now comes from contextJsParameters.kfind.buildTime via JSP.
+// Build time now comes from contextJsParameters.quickFind.buildTime via JSP.
 
 declare module "*.module.css" {
   const classes: { readonly [key: string]: string };

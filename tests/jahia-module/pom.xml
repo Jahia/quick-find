@@ -9,11 +9,11 @@
         <version>8.2.2.0</version>
     </parent>
     <groupId>org.jahia.test</groupId>
-    <artifactId>kfind-test-module</artifactId>
-    <name>Test module for kFind</name>
+    <artifactId>quick-find-test-module</artifactId>
+    <name>Test module for QuickFind</name>
     <version>0.1.0-SNAPSHOT</version>
     <packaging>bundle</packaging>
-    <description>A test module for kFind (search dialog for Jahia)</description>
+    <description>A test module for QuickFind (search dialog for Jahia)</description>
 
     <properties>
         <jahia.plugin.version>6.9</jahia.plugin.version>

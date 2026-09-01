@@ -11,9 +11,9 @@
         <version>8.2.2.0</version>
     </parent>
     <groupId>org.jahia.pm.modules</groupId>
-    <artifactId>kfind</artifactId>
+    <artifactId>quick-find</artifactId>
     <version>0.9.0-SNAPSHOT</version>
-    <name>kfind</name>
+    <name>QuickFind</name>
     <description>Provides a search box to find pages, documents, and features in Jahia.</description>
     <packaging>bundle</packaging>
 
@@ -48,7 +48,7 @@
                 <extensions>true</extensions>
                 <configuration>
                     <instructions>
-                        <Bundle-SymbolicName>kfind</Bundle-SymbolicName>
+                        <Bundle-SymbolicName>quick-find</Bundle-SymbolicName>
                         <_dsannotations>*</_dsannotations>
                         <Import-Package>
                             org.jahia.modules.graphql.provider.dxm,

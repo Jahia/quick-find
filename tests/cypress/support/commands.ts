@@ -1,5 +1,5 @@
 // ***********************************************
-// Custom commands for kfind Cypress tests
+// Custom commands for quick-find Cypress tests
 // ***********************************************
 
 import 'cypress-wait-until';
@@ -11,7 +11,7 @@ declare global {
     namespace Cypress {
         interface Chainable {
             visitJContentPage(siteKey: string, language?: string, app?: string): Chainable<void>;
-            closeKfindModalIfOpen(): Chainable<void>;
+            closeQuickFindModalIfOpen(): Chainable<void>;
         }
     }
 }
@@ -22,13 +22,13 @@ Cypress.Commands.add('visitJContentPage', (siteKey: string, language = 'en', app
     cy.get('body', {timeout: 30000}).should('be.visible');
 });
 
-Cypress.Commands.add('closeKfindModalIfOpen', () => {
+Cypress.Commands.add('closeQuickFindModalIfOpen', () => {
     cy.get('body').then($body => {
-        if ($body.find('[data-kfind-panel="true"]').length === 0) {
+        if ($body.find('[data-quick-find-panel="true"]').length === 0) {
             return;
         }
 
         cy.get('body').type('{esc}');
-        cy.get('[data-kfind-panel="true"]').should('not.exist');
+        cy.get('[data-quick-find-panel="true"]').should('not.exist');
     });
 });

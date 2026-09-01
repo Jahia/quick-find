@@ -1,4 +1,4 @@
-# kFind — Workspace Instructions
+# QuickFind — Workspace Instructions
 
 ## Project Overview
 
@@ -9,22 +9,22 @@ Jahia OSGi module (primarily frontend, with a lightweight Java GraphQL extension
 - **React 18** + **TypeScript 5.9**, bundled with **Vite 7** (Module Federation via `@jahia/vite-federation-plugin`)
 - **Apollo Client 3** for GraphQL queries
 - **@jahia/moonstone** design system (custom local build, non-singleton)
-- **react-i18next** for i18n (namespace `kFind`, locales: en/fr/de)
+- **react-i18next** for i18n (namespace `QuickFind`, locales: en/fr/de)
 - **CSS Modules** for styling (`.module.css`)
 - Java 17, Maven 3, Node LTS, Yarn 4 (managed via `mise.toml`)
 
 ## Java Implementation
 
-- Java backend code lives in `src/main/java/org/jahia/pm/modules/kfind/graphql/` and is intentionally limited to GraphQL extension wiring.
-- `KFindQueryExtensions` adds the `urlReverseLookup(url, siteKey)` GraphQL query used by the UI to resolve live URLs to Jahia content paths.
-- `KFindGraphQLExtensionProvider` registers the extension through OSGi (`DXGraphQLExtensionsProvider`) for Jahia runtime discovery.
+- Java backend code lives in `src/main/java/org/jahia/pm/modules/quick-find/graphql/` and is intentionally limited to GraphQL extension wiring.
+- `QuickFindQueryExtensions` adds the `urlReverseLookup(url, siteKey)` GraphQL query used by the UI to resolve live URLs to Jahia content paths.
+- `QuickFindGraphQLExtensionProvider` registers the extension through OSGi (`DXGraphQLExtensionsProvider`) for Jahia runtime discovery.
 - Keep backend additions aligned with OSGi service patterns documented in `contributing.md`.
 
 ## Build & Deploy
 
 ```bash
 yarn build          # Vite build → src/main/resources/javascript/apps/
-mvn clean install   # Full build → target/kfind-*.jar
+mvn clean install   # Full build → target/quick-find-*.jar
 ./deploy.sh         # Deploy JAR to Jahia (requires .env with JAHIA_URL, JAHIA_USER, JAHIA_PASS)
 npx tsc --noEmit    # Type-check
 ```
@@ -37,12 +37,12 @@ E2E tests are available under `tests/` (Cypress setup).
 src/javascript/
   init.ts                      → Entry: registers i18n + routes via @jahia/ui-extender
   globals.d.ts                 → Window augmentation (contextJsParameters, jahia, CE_API)
-  kfind/
-    KFindModal.tsx             → Modal wrapper, shortcuts, ApolloProvider from window.jahia.apolloClient
-    KFindPanel/                → Search input + section rendering
+  quick-find/
+    QuickFindModal.tsx             → Modal wrapper, shortcuts, ApolloProvider from window.jahia.apolloClient
+    QuickFindPanel/                → Search input + section rendering
     routes.tsx                 → Jahia registry entry, mounts modal/header integration
     shared/                    → Navigation/config/orchestration helpers
-  kfind-providers/
+  quick-find-providers/
     registerAll.ts             → Registers all search providers
     augmented/                 → Augmented search provider and queries
     jcr/                       → JCR fallback providers (pages/media/main resources)
@@ -50,12 +50,12 @@ src/javascript/
     urlReverseLookup/          → URL reverse lookup provider
 ```
 
-- `useSearchOrchestration` is registry-driven and runs all enabled `kfindProvider` providers.
+- `useSearchOrchestration` is registry-driven and runs all enabled `quickFindProvider` providers.
 - Provider availability uses `checkAvailability(client)` and is evaluated with `window.jahia.apolloClient`.
-- Provider extensibility is registry-based: any module can register a provider with `registry.add("kfindProvider", "<key>", provider)`.
-- Third-party Jahia modules should add registrations in their own init callback; they do not need to edit `kfind-providers/registerAll.ts`.
-- Runtime config comes from `window.contextJsParameters.kfind` (populated from OSGi `.cfg`/JSP).
-- Navigation to jContent is handled via shared helpers in `kfind/shared/navigationUtils.ts`.
+- Provider extensibility is registry-based: any module can register a provider with `registry.add("quickFindProvider", "<key>", provider)`.
+- Third-party Jahia modules should add registrations in their own init callback; they do not need to edit `quick-find-providers/registerAll.ts`.
+- Runtime config comes from `window.contextJsParameters.quickFind` (populated from OSGi `.cfg`/JSP).
+- Navigation to jContent is handled via shared helpers in `quick-find/shared/navigationUtils.ts`.
 
 ## Conventions
 

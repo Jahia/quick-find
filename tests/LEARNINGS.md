@@ -1,8 +1,8 @@
-# kfind e2e Test Infrastructure — Learnings
+# quick-find e2e Test Infrastructure — Learnings
 
 ## JCR Node Constraints
 
--   `kfindtest:mainResource` cannot be created under `jnt:contentFolder` — only under `jnt:page` (e.g. `/sites/${siteKey}/home`)
+-   `quickfindtest:mainResource` cannot be created under `jnt:contentFolder` — only under `jnt:page` (e.g. `/sites/${siteKey}/home`)
 -   `jnt:file` requires a `jcr:content` child (`jnt:resource`) with mandatory `jcr:mimeType` **and** `jcr:data` (binary)
 
 ## GraphQL File Upload
@@ -26,22 +26,22 @@
 
 ## Site Setup
 
--   `kfind-test-module` must be deployed as a `j:moduleType="templatesSet"` with a `<templates>` folder, a `<base>` template, a `<home>` page template, and a `<home>` page node
+-   `quick-find-test-module` must be deployed as a `j:moduleType="templatesSet"` with a `<templates>` folder, a `<base>` template, a `<home>` page template, and a `<home>` page node
 -   `jnt:page` creation requires mandatory `j:templateName` property
 
 ## Test Status Snapshot (2026-04-04)
 
 | Spec               | Result |
 | ------------------ | ------ |
-| kfindEdgeCases     | ✅ 5/5 |
-| kfind0Setup        | ✅ 1/1 |
-| kfindPages         | ✅ 2/2 |
-| kfindPagination    | ✅ 2/2 |
-| kfindMainResources | ✅ 3/3 |
-| kfindMedia         | ✅ 2/2 |
-| kfindFeatures      | ⚠️ 1/2 |
-| kfindInteraction   | ⚠️ 1/3 |
-| kfindZTeardown     | ✅ 1/1 |
+| quickFindEdgeCases     | ✅ 5/5 |
+| quickFind0Setup        | ✅ 1/1 |
+| quickFindPages         | ✅ 2/2 |
+| quickFindPagination    | ✅ 2/2 |
+| quickFindMainResources | ✅ 3/3 |
+| quickFindMedia         | ✅ 2/2 |
+| quickFindFeatures      | ⚠️ 1/2 |
+| quickFindInteraction   | ⚠️ 1/3 |
+| quickFindZTeardown     | ✅ 1/1 |
 
 Notes:
 
@@ -52,7 +52,7 @@ Notes:
 
 ### Findings
 
--   Baseline keyboard failures were reproducible only when setup dependencies were respected; targeted runs must include `kfind0Setup.cy.ts`.
+-   Baseline keyboard failures were reproducible only when setup dependencies were respected; targeted runs must include `quickFind0Setup.cy.ts`.
 -   The previous `modal/panel/search input` readiness checks were too strict on timing for CI variability.
 -   Interaction keyboard tests became stable after waiting for visible result rows before asserting Tab and Shift+Tab focus transitions.
 -   Pagination keyboard tests were flaky when relying on implicit focus path from the search input.
@@ -67,7 +67,7 @@ Notes:
 
 ### Validation results
 
--   Command: `yarn cypress run --spec cypress/e2e/kfind0Setup.cy.ts,cypress/e2e/kfindInteraction.cy.ts,cypress/e2e/kfindPagination.cy.ts`
+-   Command: `yarn cypress run --spec cypress/e2e/quickFind0Setup.cy.ts,cypress/e2e/quickFindInteraction.cy.ts,cypress/e2e/quickFindPagination.cy.ts`
 -   Result: `8 passing, 0 failing`.
 -   Latest passing reports: `cypress_[name]_019.json`, `cypress_[name]_020.json`, `cypress_[name]_021.json`.
 

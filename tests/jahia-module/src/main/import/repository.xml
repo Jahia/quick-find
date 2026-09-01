@@ -2,11 +2,11 @@
 <content xmlns:j="http://www.jahia.org/jahia/1.0"
          xmlns:jcr="http://www.jcp.org/jcr/1.0">
     <modules jcr:primaryType="jnt:modules">
-        <kfind-test-module j:dependencies="default"
-                           j:installedModules="kfind-test-module"
+        <quick-find-test-module j:dependencies="default"
+                           j:installedModules="quick-find-test-module"
                            j:modulePriority="0"
                            j:moduleType="templatesSet"
-                           j:title="kFind test module"
+                           j:title="QuickFind test module"
                            jcr:primaryType="jnt:module">
             <portlets jcr:primaryType="jnt:portletFolder"/>
             <files jcr:primaryType="jnt:folder"/>
@@ -14,7 +14,7 @@
             <templates jcr:primaryType="jnt:templatesFolder">
                 <files jcr:primaryType="jnt:folder"/>
                 <contents jcr:primaryType="jnt:contentFolder"/>
-                <base j:view="kfind-test-module"
+                <base j:view="quick-find-test-module"
                       jcr:primaryType="jnt:template">
                     <home jcr:primaryType="jnt:pageTemplate"/>
                 </base>
@@ -27,6 +27,6 @@
                                   jcr:primaryType="jnt:translation"
                                   jcr:title="Home"/>
             </home>
-        </kfind-test-module>
+        </quick-find-test-module>
     </modules>
 </content>

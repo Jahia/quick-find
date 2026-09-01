@@ -1,4 +1,4 @@
-# kFind
+# QuickFind
 
 A Spotlight-style search modal for [Jahia CMS](https://www.jahia.com/) that lets editors quickly find and navigate to any content, page, media, feature, or URL directly from the authoring interface. Open it with **⌘K** (macOS) or **Ctrl+K** (Windows/Linux) and start typing — results appear instantly across multiple search providers.
 
@@ -6,7 +6,7 @@ A Spotlight-style search modal for [Jahia CMS](https://www.jahia.com/) that lets
 
 - GraphQL API field placement may not be ideal yet: `fuzzyUrlAndPathLookup` was added at the query root.
 - `pom.xml` currently looks overly complex and likely needs simplification.
-- In `package.json`, using `kfind` as the package name appears to break Jahia UI behavior (root cause still unknown).
+- In `package.json`, using `quick-find` as the package name appears to break Jahia UI behavior (root cause still unknown).
 - For the `features` provider, discovering reliable Jahia feature/menu routes is difficult and currently relies on guesswork.
 - A good reusable deterministic Java service method was not found to resolve a node from a URL across both vanity and regular URL forms (`/sites/{siteKey}/...`, etc.).
 - Cypress tests were blocked by CSRF at one point, leading to a workaround that may no longer be necessary.
@@ -27,13 +27,13 @@ React 18 + TypeScript, bundled with Vite 7 and Module Federation (`@jahia/vite-f
 | Go to selected result | **Enter**               |
 | Edit selected result  | **E**                   |
 
-A custom DOM event `kfind:open-search` can also open the modal programmatically (used by the nav search button).
+A custom DOM event `quick-find:open-search` can also open the modal programmatically (used by the nav search button).
 
 ## Search Sections
 
 The modal displays results in up to six sections, each powered by an independent search provider. Sections appear conditionally based on configuration and site capabilities.
 
-**Direct URL Match** — When the query looks like a URL (starts with `http://`, `https://`, `/`, or contains a domain pattern), kFind resolves it against Jahia's vanity URLs and JCR paths via a custom GraphQL endpoint. Returns one or more matching nodes if found.
+**Direct URL Match** — When the query looks like a URL (starts with `http://`, `https://`, `/`, or contains a domain pattern), QuickFind resolves it against Jahia's vanity URLs and JCR paths via a custom GraphQL endpoint. Returns one or more matching nodes if found.
 
 **Features** — Filters Jahia's UI registry in memory (no network call) to surface admin routes, jContent apps, and jExperience menu items matching the query. Results are computed locally and appear instantly once the minimum character threshold is reached.
 
@@ -49,35 +49,35 @@ The modal displays results in up to six sections, each powered by an independent
 
 `urlReverseLookupProvider` is registered like the other providers and runs only for URL-like input (`http://`, `https://`, absolute paths, or domain-like patterns).
 
-On the backend, `KFindQueryExtensions.urlReverseLookup(url, siteKey)` extracts the path, tries multiple site-scoped candidates with Jahia's `URLResolver` (`rawPath`, `/sites/{siteKey}{path}`, `/sites/{siteKey}/home{path}`), and returns distinct matching nodes.
+On the backend, `QuickFindQueryExtensions.urlReverseLookup(url, siteKey)` extracts the path, tries multiple site-scoped candidates with Jahia's `URLResolver` (`rawPath`, `/sites/{siteKey}{path}`, `/sites/{siteKey}/home{path}`), and returns distinct matching nodes.
 
 ## Architecture
 
 ```
 init.ts → registerRoutes()
   ├─ register built-in providers (features, urlReverseLookup, augmented, jcr/*)
-  ├─ <KFindModal />           (separate React root)
+  ├─ <QuickFindModal />           (separate React root)
   │   ├─ ApolloProvider       (client from window.jahia.apolloClient)
-  │   └─ <KFindPanel />
-  │       ├─ <KFindHeader />  (input + clear button)
+  │   └─ <QuickFindPanel />
+  │       ├─ <QuickFindHeader />  (input + clear button)
   │       └─ <ResultsSection /> instances rendered from provider outputs
   └─ <NavSearchButton />      (in jcontent's React tree)
-      └─ dispatches `kfind:open-search` custom event
+      └─ dispatches `quick-find:open-search` custom event
 ```
 
 The module registers itself via `@jahia/ui-extender` at app startup. The modal runs in its own React root (outside jcontent's tree), and both the modal and provider orchestration read the shared Apollo client directly from `window.jahia.apolloClient`. The `useSearchOrchestration` hook coordinates all providers: it checks augmented-search availability, debounces input, routes queries to the appropriate providers, and aggregates results.
 
 ### Extensibility: Third-Party Providers
 
-To keep the architecture clean, providers are declared separately and discovered through the registry. Built-in providers are loaded from `src/javascript/kfind-providers/registerAll.ts`, where each provider registers itself with:
+To keep the architecture clean, providers are declared separately and discovered through the registry. Built-in providers are loaded from `src/javascript/quick-find-providers/registerAll.ts`, where each provider registers itself with:
 
-`registry.add("kfindProvider", "my-provider-key", providerDefinition)`
+`registry.add("quickFindProvider", "my-provider-key", providerDefinition)`
 
-The ability to extend kFind with additional providers from third-party modules has not been tested yet.
+The ability to extend QuickFind with additional providers from third-party modules has not been tested yet.
 
 ## Configuration
 
-All settings are defined in the OSGi configuration file `org.jahia.pm.modules.kfind.cfg` and injected at runtime into `window.contextJsParameters.kfind` via a JSP.
+All settings are defined in the OSGi configuration file `org.jahia.pm.modules.quickfind.cfg` and injected at runtime into `window.contextJsParameters.quickFind` via a JSP.
 
 | Property                                   | Default | Description                                         |
 | ------------------------------------------ | ------- | --------------------------------------------------- |
@@ -97,7 +97,7 @@ All settings are defined in the OSGi configuration file `org.jahia.pm.modules.kf
 
 ## Internationalization
 
-Translations live in `src/main/resources/javascript/locales/` under the `kfind` i18n namespace. All keys are maintained in three locales: English (`en.json`), French (`fr.json`), and German (`de.json`). The active language aligns with Jahia's UI language (`window.contextJsParameters.uilang`) at module initialization. Every `t()` call includes a hardcoded fallback string for resilience.
+Translations live in `src/main/resources/javascript/locales/` under the `quick-find` i18n namespace. All keys are maintained in three locales: English (`en.json`), French (`fr.json`), and German (`de.json`). The active language aligns with Jahia's UI language (`window.contextJsParameters.uilang`) at module initialization. Every `t()` call includes a hardcoded fallback string for resilience.
 
 ## Build & Deploy
 
@@ -106,7 +106,7 @@ Translations live in `src/main/resources/javascript/locales/` under the `kfind` 
 ```bash
 yarn build              # Vite build → src/main/resources/javascript/apps/
 yarn lint               # ESLint checks
-mvn clean install       # Full build (includes Vite) → target/kfind-*.jar
+mvn clean install       # Full build (includes Vite) → target/quick-find-*.jar
 npx tsc --noEmit        # Type-check (vite.config.ts is intentionally excluded)
 cd tests && yarn e2e:ci # Run Cypress E2E tests
 ./deploy.sh             # Deploy JAR to Jahia

@@ -1532,9 +1532,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@jahia/kfind-cypress@workspace:.":
+"@jahia/quick-find-cypress@workspace:.":
   version: 0.0.0-use.local
-  resolution: "@jahia/kfind-cypress@workspace:."
+  resolution: "@jahia/quick-find-cypress@workspace:."
   dependencies:
     "@apollo/client": "npm:^3.11.7"
     "@cypress/code-coverage": "npm:^3.9.11"

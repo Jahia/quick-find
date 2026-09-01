@@ -1,4 +1,4 @@
-<kfindtest='http://www.jahia.org/kfindtest/nt/1.0'>
+<quickfindtest='http://www.jahia.org/quickfindtest/nt/1.0'>
 
-[kfindtest:mainResource] > jnt:content, jmix:mainResource
+[quickfindtest:mainResource] > jnt:content, jmix:mainResource
  - jcr:title (string) i18n

@@ -52,11 +52,11 @@ jobs:
     uses: Jahia/jahia-modules-action/.github/workflows/reusable-integration-tests.yml@v2
     secrets: inherit
     with:
-      module_id: kfind
+      module_id: quick-find
       module_branch: ${{ github.ref }}
       jahia_image: ghcr.io/jahia/jahia-ee-dev:8-SNAPSHOT
       provisioning_manifest: provisioning-manifest-build.yml
-      artifact_prefix: kfind-artifacts
+      artifact_prefix: quick-find-artifacts
       should_use_build_artifacts: true
       should_skip_testrail: true
       pagerduty_skip_notification: true

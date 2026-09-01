@@ -21,7 +21,7 @@ This module uses a mixed toolchain:
 - Java packaging: Maven bundle packaging in `pom.xml`.
 - Integration point: Maven `exec-maven-plugin` runs `yarn install` and `yarn build` during `generate-resources`.
 
-The resulting artifact is a module JAR in `target/` with pattern `kfind-*.jar`.
+The resulting artifact is a module JAR in `target/` with pattern `quick-find-*.jar`.
 
 ## Source Of Truth For Build Modes
 
@@ -130,7 +130,7 @@ echo "==> Building module ($MODE)..."
 t0=$(date +%s)
 mvn "${MVN_ARGS[@]}"
 
-JAR="$(ls "$SCRIPT_DIR"/target/kfind-*.jar 2>/dev/null | grep -v sources | head -1)"
+JAR="$(ls "$SCRIPT_DIR"/target/quick-find-*.jar 2>/dev/null | grep -v sources | head -1)"
 [[ -z "$JAR" ]] && {
   echo "✗ No JAR found in target/ after build." >&2
   exit 1
@@ -183,7 +183,7 @@ After creating or modifying deployment logic, verify:
 
 - Script rejects invalid mode or command values.
 - `dev` mode effectively uses Maven `-P dev`.
-- Exactly one non-sources `target/kfind-*.jar` is selected.
+- Exactly one non-sources `target/quick-find-*.jar` is selected.
 - Provisioning API returns `2xx` on successful deploy.
 - `test` mode executes Cypress only after deploy success.
 - Script exits non-zero on build, deploy, or test failures.

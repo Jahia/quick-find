@@ -1,7 +1,7 @@
 {
-    "name": "@jahia/kfind-cypress",
+    "name": "@jahia/quick-find-cypress",
     "version": "1.0.0",
-    "description": "Cypress tests for the kfind module",
+    "description": "Cypress tests for the quick-find module",
     "private": true,
     "devDependencies": {
         "@apollo/client": "^3.11.7",

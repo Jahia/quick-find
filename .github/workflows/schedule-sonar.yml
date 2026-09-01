@@ -15,7 +15,7 @@ jobs:
       matrix:
         git_branch: ["${{ github.event.repository.default_branch }}"]
     with:
-      module_id: kfind
+      module_id: quick-find
       git_branch: ${{ matrix.git_branch }}
-      incident_service: kfind-sonar
-      github_slug: Jahia/kfind
+      incident_service: quick-find-sonar
+      github_slug: Jahia/quick-find

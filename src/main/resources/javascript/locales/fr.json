@@ -1,5 +1,5 @@
 {
-  "label": "kfind",
+  "label": "QuickFind",
   "search": {
     "placeholder": "Rechercher…",
     "loading": "Recherche en cours…",
@@ -10,10 +10,10 @@
     },
     "modal": {
       "label": "Recherche",
-      "title": "Bienvenue dans kfind",
+      "title": "Bienvenue dans QuickFind",
       "siteInfo": "Recherche dans {{site}}, {{language}}",
       "hint": "Appuyez sur Ctrl+K ou ⌘K pour ouvrir. Échap pour fermer. Naviguez avec la touche Tab. Entrée pour accéder. e pour modifier.",
-      "reportIssue": "Signalez les bugs et propositions d'amélioration sur https://github.com/Jahia/kfind/issues"
+      "reportIssue": "Signalez les bugs et propositions d'amélioration sur https://github.com/Jahia/quick-find/issues"
     },
     "empty": {
       "title": "Trouvez n'importe quoi.",
