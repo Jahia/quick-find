@@ -324,65 +324,29 @@ export const openSearchModal = () => {
     const panelSelector = '[data-quick-find-panel="true"]';
     const modalSelector = '[data-quick-find-modal="true"]';
 
-    // Wait for quick-find to mount its modal container — once #quick-find-search-modal
-    // exists, the QuickFindModal useEffect has run and the quick-find:open-search
-    // listener is registered on window.
+    // Coarse gate only: routes.tsx appends the container before createRoot() and render(),
+    // so its presence proves mountModal() started, not that QuickFindModal's effect has
+    // attached the listener. The generous timeout covers ensureI18nReady()'s network calls.
     cy.get('#quick-find-search-modal', {timeout: 30000}).should('exist');
 
-    cy.get('body').then($body => {
-        if ($body.find(`${panelSelector}:visible`).length > 0) {
-            cy.log('[openSearchModal] Panel already visible, skipping open');
-            return;
-        }
-
-        cy.log('[openSearchModal] Trying custom event + keyboard shortcut');
-        cy.window().then(win => {
-            const dispatchOpenEvent = (target: Window & typeof globalThis) => {
-                target.dispatchEvent(new target.CustomEvent('quick-find:open-search'));
-            };
-
-            const dispatchOpenShortcut = (targetWindow: Window & typeof globalThis) => {
-                const evt = new targetWindow.KeyboardEvent('keydown', {
-                    key: 'k',
-                    ctrlKey: true,
-                    bubbles: true
-                });
-
-                targetWindow.document.dispatchEvent(evt);
-            };
-
-            // Trigger the same open paths as production UX (event + shortcut).
-            dispatchOpenEvent(win);
-            dispatchOpenShortcut(win);
-
-            try {
-                const parentWindow = win.parent as Window & typeof globalThis;
-                if (parentWindow && parentWindow !== win) {
-                    dispatchOpenEvent(parentWindow);
-                    dispatchOpenShortcut(parentWindow);
-                }
-            } catch {
-                // Ignore cross-context parent access issues.
-            }
-        });
-    });
-
-    cy.get('body').then($body => {
-        if ($body.find(`${panelSelector}:visible`).length > 0) {
-            cy.log('[openSearchModal] Panel opened via custom event / shortcut');
-            return;
-        }
-
-        // Last-resort fallback for environments where synthetic events are ignored.
-        cy.log('[openSearchModal] Falling back to cy.type("{ctrl}k")');
-        cy.get('body').type('{ctrl}k');
+    // The dispatch lives inside .should() so it is REPLAYED on every retry: a listener that
+    // had not attached yet on the first pass gets the event on a later one. Safe because
+    // quick-find:open-search maps to setIsOpen(true) — re-dispatching an open modal is a
+    // no-op. Never send Ctrl+K from here: it is setIsOpen(prev => !prev), and a harness
+    // cannot read isOpen synchronously, so it would close a modal that had opened but not
+    // yet committed. Moonstone renders nothing while closed, so "the node exists" is an
+    // exact test for "open".
+    cy.window({timeout: LONG_TIMEOUT}).should(win => {
+        win.dispatchEvent(new win.CustomEvent('quick-find:open-search'));
+        expect(
+            win.document.querySelector(modalSelector),
+            'quick-find modal — open event replayed until the listener answers'
+        ).to.not.equal(null);
     });
 
     cy.get(modalSelector, {timeout: LONG_TIMEOUT}).should('be.visible');
     cy.get(panelSelector, {timeout: LONG_TIMEOUT}).should('be.visible');
-    cy.get('[data-quick-find-search-input-wrapper="true"] input[type="search"]', {timeout: LONG_TIMEOUT})
-        .as('searchInput')
-        .should('be.visible');
+    cy.get(SEARCH_INPUT_SELECTOR, {timeout: LONG_TIMEOUT}).as('searchInput').should('be.visible');
 };
 
 export const closeSearchModal = () => {
