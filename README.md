@@ -148,3 +148,7 @@ The project includes Copilot skill guides under `.github/skills/`:
 - `jahia-config`: OSGi config surfaced to JavaScript via JSP + `contextJsParameters`
 - `jahia-graphql-frontend`: TypeScript GraphQL queries (JCR and augmented search)
 - `jahia-graphql-extension`: Java GraphQL extensions with `@GraphQLTypeExtension`
+
+## License
+
+Licensed under the [MIT License](LICENSE).

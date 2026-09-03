@@ -2,6 +2,7 @@
   "name": "quickfind",
   "comment-for-name": "do not use quick-find for package name otherwise it blocks the rendering of the ui",
   "private": true,
+  "license": "MIT",
   "type": "module",
   "packageManager": "yarn@4.13.0",
   "scripts": {
