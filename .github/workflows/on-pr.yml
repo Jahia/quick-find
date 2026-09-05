@@ -4,15 +4,15 @@ on:
   pull_request:
     types: [opened, reopened, synchronize]
 
-permissions:
-  actions: read
-  checks: write
-  contents: read
-  id-token: write
-
 jobs:
   build:
     name: Build module
+    # Scoped per job rather than workflow-wide: every job would otherwise receive
+    # checks:write and id-token:write, which only integration-tests and nothing
+    # respectively actually need.
+    permissions:
+      actions: read
+      contents: read
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/jahia/jahia-docker-mvn-cache:11-jdk-noble-mvn-loaded
@@ -35,6 +35,12 @@ jobs:
   integration-tests:
     name: Integration Tests
     needs: build
+    # checks:write is required by dorny/test-reporter inside the reusable workflow,
+    # which declares no permissions of its own and so runs on what it is given here.
+    permissions:
+      actions: read
+      checks: write
+      contents: read
     uses: Jahia/jahia-modules-action/.github/workflows/reusable-integration-tests.yml@v2
     secrets: inherit
     with:

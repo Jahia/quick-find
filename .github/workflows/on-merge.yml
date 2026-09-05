@@ -7,16 +7,15 @@ on:
     tags-ignore:
       - "**"
 
-permissions:
-  actions: read
-  checks: write
-  contents: read
-  id-token: write
-
 jobs:
   update-signature:
     name: Update module signature
     runs-on: ubuntu-latest
+    # Scoped per job rather than workflow-wide: every job would otherwise receive
+    # checks:write and id-token:write. No job here uses OIDC, and only
+    # integration-tests reports a check run.
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
       - uses: jahia/jahia-modules-action/update-signature@v2
@@ -28,6 +27,9 @@ jobs:
     name: Build module
     needs: update-signature
     runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
     container:
       image: ghcr.io/jahia/jahia-docker-mvn-cache:11-jdk-noble-mvn-loaded
       credentials:
@@ -49,6 +51,12 @@ jobs:
   integration-tests:
     name: Integration Tests
     needs: build
+    # checks:write is required by dorny/test-reporter inside the reusable workflow,
+    # which declares no permissions of its own and so runs on what it is given here.
+    permissions:
+      actions: read
+      checks: write
+      contents: read
     uses: Jahia/jahia-modules-action/.github/workflows/reusable-integration-tests.yml@v2
     secrets: inherit
     with:
@@ -65,6 +73,8 @@ jobs:
     name: SBOM processing
     needs: build
     runs-on: ubuntu-latest
+    permissions:
+      actions: read
     container:
       image: cyclonedx/cyclonedx-cli:0.24.2
     steps:
@@ -79,6 +89,8 @@ jobs:
     needs: build
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     container:
       image: ghcr.io/jahia/jahia-docker-mvn-cache:11-jdk-noble-mvn-loaded
       credentials:
