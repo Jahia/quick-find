@@ -149,6 +149,10 @@ The project includes Copilot skill guides under `.github/skills/`:
 - `jahia-graphql-frontend`: TypeScript GraphQL queries (JCR and augmented search)
 - `jahia-graphql-extension`: Java GraphQL extensions with `@GraphQLTypeExtension`
 
+## Learnings
+
+Debugging notes for this module's CI and test environment are in [docs/LEARNINGS.md](docs/LEARNINGS.md); test-authoring notes are in [tests/LEARNINGS.md](tests/LEARNINGS.md).
+
 ## License
 
 Licensed under the [MIT License](LICENSE).
