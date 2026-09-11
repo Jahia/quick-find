@@ -27,7 +27,7 @@
 
 
     <properties>
-        <jahia-depends>default,graphql-dxm-provider,jcontent</jahia-depends>
+        <jahia-depends>default,graphql-dxm-provider,jcontent=3.7.1</jahia-depends>
         <graphql-dxm-provider.version>3.6.0</graphql-dxm-provider.version>
         <graphql-java-annotations.version>9.1</graphql-java-annotations.version>
         <node.version>v22.14.0</node.version>
