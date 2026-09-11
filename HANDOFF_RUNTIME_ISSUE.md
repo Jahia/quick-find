@@ -48,7 +48,15 @@ Inspecting `__FEDERATION__.__INSTANCES__` at runtime revealed:
 - **quick-find** shared entries for react/react-dom have `lib: function` (bundled fallback exists)
 - **copy-to-other-languages** (a working module) shared entries have `lib: undefined` (no bundled fallback)
 
-The `lib` property is the smoking gun. Modules with `lib: undefined` can only consume from the host — they never become providers. quick-find's `lib: function` makes it a potential provider, and when it wins negotiation, the dual-instance crash occurs.
+> **CORRECTION (2026-09-11).** This paragraph was wrong, and it was the load-bearing claim of
+> the original diagnosis. `lib` is a **loaded** marker, not a capability marker:
+> `isLoaded = Boolean(shared.loaded) || typeof shared.lib === 'function'`
+> (`@module-federation/runtime-core/dist/index.esm.js:933-935`). Seeing `lib: function` on
+> quick-find's react meant quick-find's copy had **already been elected and loaded**.
+> `lib: undefined` on copy-to-other-languages meant only that its entry had not been loaded yet.
+> copy-to-other-languages ships a full prebuilt React 18.2.0 and is perfectly capable of
+> providing it, as this document itself says 150 lines further down. The `lib` observation was
+> a symptom of having won the election, not the reason for winning it.
 
 ### How Vite Federation Pre-Building Works
 
@@ -66,6 +74,7 @@ The `lib` property is the smoking gun. Modules with `lib: undefined` can only co
 
 - Changed package name from kfinder to quickfind
 - Result: no functional improvement, crash persisted
+- **Note for anyone reading [Jahia/quick-find#15](https://github.com/Jahia/quick-find/issues/15):** its console capture names `kfinder`, so it predates both this rename and the `version: "0.0.0"` config. Those lines are evidence of the *old* build's behaviour; re-capture before attributing any of them to the current artefact. The rename is also not cosmetic: the module name is the tie-break key when two registrants collide on the same version string
 
 #### 2) Baseline alignment with reference repos
 
@@ -220,14 +229,14 @@ Inspecting copy-to-other-languages' pre-built React bundle reveals it is a **FUL
 It works because **version negotiation prevents it from ever winning**:
 - copy-to-other-languages declares react **18.2.0**
 - The host (server-settings) provides react **18.3.1**
-- Singleton negotiation picks the highest version → **18.3.1 always wins**
+- Singleton negotiation elects **loaded-first, then highest** → 18.3.1 wins *provided nothing lower has been loaded yet*
 - copy-to-other-languages' `get()` for react is NEVER called
 - copy-to-other-languages' `loadShare("react")` resolves to the host's 18.3.1
 
 ### Why quick-find Crashes (Version Tie)
 
-quick-find declares react **18.3.1** — the SAME version as the host. When two entries have the same version:
-- The tie-breaking favors quick-find's entry (possibly by registration order)
+quick-find declares react **18.3.1** — the SAME version as the host. When two entries collide on the same version key:
+- The incumbent is replaced when `uniqueName > activeVersion.from` — a **lexicographic string compare**, not registration order (webpack `ShareRuntimeModule.js:103`; MF runtime-core mirror ~`:2735`). Both `kfinder` and `quickfind` sort after `@jahia/jcontent`, which is why quick-find took the 18.3.1 key. A rename changes this outcome; registration order never did
 - quick-find's `get()` is called, returning either a separate React instance (pre-built) or an empty factory (patched)
 - Either outcome breaks the platform
 
@@ -261,7 +270,11 @@ However, this gap is irrelevant IF the version negotiation prevents the Vite mod
 
 ## Recommended Fix
 
-### Downgrade react/react-dom to match copy-to-other-languages
+### Downgrade react/react-dom to match copy-to-other-languages — SUPERSEDED, NOT APPLIED
+
+> Kept for history. Its rationale ("the host's 18.3.1 always wins negotiation") is wrong:
+> election is loaded-first, then highest. The `version: "0.0.0"` override in the Resolution
+> section was shipped instead.
 
 1. Change `react` and `react-dom` in package.json from `^18.3.1` to `^18.2.0`
 2. Remove ALL custom `shared` config from vite.config.ts
@@ -281,7 +294,7 @@ shared: {
   "react-dom": { singleton: true, version: "0.0.0" },
 }
 ```
-This ensures quick-find NEVER wins version negotiation regardless of the actual dependency version. Keep `import: false` and the patch plugin as safety nets.
+This makes quick-find lose a **contested** election against an unloaded higher version. It does **not** make quick-find lose an uncontested one: a sole registrant is elected unconditionally (`ConsumeSharedRuntimeModule.js:208`, `if (!exists(scope, key)) return useFallback(...)`), and loaded-stickiness means a 0.0.0 entry loaded first stays elected. When 0.0.0 wins it satisfies no caret range at all, so it both triggers the warning and hands the consumer quick-find's own bundled copy — strictly worse than advertising the real version.
 
 ## Resolution: version: "0.0.0" Override
 
@@ -291,9 +304,20 @@ The fix that resolved the page-load crash:
 
 1. **Removed `import: false`** from all shared entries — let the Vite plugin generate pre-built bundles normally (real factories, not empty/throwing ones)
 2. **Removed the `patchSharedGetThrows` plugin** — no longer needed
-3. **Set `version: "0.0.0"`** for all host-provided deps so quick-find NEVER wins singleton negotiation
+3. **Set `version: "0.0.0"`** for seven host-provided deps, so quick-find loses a contested singleton election
 
-This produces shared entries with real `get()` factories (matching copy-to-other-languages' pattern) but version 0.0.0, which always loses to the host's higher versions. The host's React is always selected.
+This produces shared entries with real `get()` factories (matching copy-to-other-languages' pattern) but version 0.0.0, which loses to any *unloaded* higher version the host has registered. In practice the host's React is selected and the crash is gone.
+
+> **The override does not cover everything it appears to.** `@jahia/vite-federation-plugin`
+> auto-shares **every** `dependencies` key as `{singleton: true}` and merges the explicit
+> `shared` block over that map **per key, replacing the whole value** (`dist/index.js:61-64`;
+> `devDependencies` are not auto-shared). quick-find therefore ships **nine** shared singletons
+> and the override reaches **seven**. Verified in the shipped artefact: `index.js` contains
+> nine `from:"quickfind"` descriptors and exactly seven `version:"0.0.0"`, with
+> `@jahia/moonstone` at `2.19.0` and `@jahia/ui-extender` at `1.2.0`. Both are **lower** than
+> jcontent's 2.20.3 / 1.3.0, so if either is elected jcontent both warns and receives
+> quick-find's older copy. The plugin's own JSDoc (`index.d.ts:18-22`) calls the block
+> "Additional dependencies", which reads as additive and is not.
 
 ### Additional Fix: Restored Modified Source Files
 
@@ -337,6 +361,90 @@ export default defineConfig(({ mode }) => ({
   ],
 }));
 ```
+
+### What `version: "0.0.0"` does NOT change — the demand side
+
+The override lowers only what quick-find **advertises**. What it **demands** is computed
+separately as `^<installed version read from node_modules>`
+(`@module-federation/vite/lib/index.mjs:583` and `:588`, reading the installed `package.json`
+at `:557`). So `@apollo/client` ships as `version:"0.0.0"` with `requiredVersion:"^3.14.1"`
+while `package.json` declares `^3.11.0`.
+
+Two consequences:
+
+1. The accept-anything setting is `requiredVersion: "*"`, not `version: "0.0.0"`.
+2. The demand floor baked into the jar moves whenever the lockfile re-resolves, with no
+   reviewable config change — and `src/main/resources/javascript/apps` is git-ignored
+   (`.gitignore:18`), so the shipped descriptors never appear in a pull request.
+
+Note the opposite convention on the host side: `@jahia/webpack-config` uses the **declared**
+range (`getModuleFederationConfig.js:94`), not the installed version.
+
+### The two warning strings — do not confuse them
+
+`Unsatisfied version X from M of shared singleton module L (required R)` is **webpack's**
+(`ConsumeSharedRuntimeModule.js:159`). `M` is the **elected supplier's** registrar. The consumer
+is anonymous: only its range `R` is printed, so `R` can never identify who complained. `R` is
+printed in its *emitted* form, not the declared one, so jcontent's moonstone prints
+`>=2.20.3 <3.0.0-0` and its react `>=18.3.1 <19.0.0-0` (`getModuleFederationConfig.js:66-86`).
+
+quick-find's own Module Federation runtime emits a **different** string —
+`Version V from F of shared singleton module L does not satisfy the requirement of C which
+needs R` (`runtime-core/index.esm.js:1064`) — and that one *does* name the consumer.
+
+Any `Unsatisfied version` line therefore came from the webpack host, and `from quickfind` in it
+means quick-find **supplied** the elected copy, not that quick-find complained.
+
+### The election rule, stated once
+
+Both runtimes elect **loaded-first, then highest version**:
+
+```js
+// webpack ConsumeSharedRuntimeModule.js:146-155
+return !a || (!versions[a].loaded && versionLt(a, b)) ? b : a;
+// MF runtime-core index.esm.js:966
+return !isLoaded(versions[prev]) && versionLt(prev, cur);
+```
+
+A **lower version that is already loaded beats a higher unloaded one.** Three consequences that
+the earlier sections of this document got wrong:
+
+- A `0.0.0` entry is elected **unconditionally** when quick-find is the only registrant of that
+  library (`ConsumeSharedRuntimeModule.js:208`).
+- A `0.0.0` entry loaded before the host registers its own stays elected by stickiness.
+- When a `0.0.0` entry wins, it satisfies **no** caret range, so the platform both warns and
+  runs quick-find's bundled copy.
+
+### Live quick-find-owned supply defects (as of 2026-09-11)
+
+The nine descriptors actually shipped in `index.js`:
+
+| Shared library | Supplied | Required |
+|---|---|---|
+| react | 0.0.0 | ^18.3.1 |
+| react-dom | 0.0.0 | ^18.3.1 |
+| @apollo/client | 0.0.0 | ^3.14.1 |
+| prop-types | 0.0.0 | ^15.8.1 |
+| graphql | 0.0.0 | ^16.13.1 |
+| i18next | 0.0.0 | ^20.6.1 |
+| react-i18next | 0.0.0 | ^11.18.6 |
+| **@jahia/moonstone** | **2.19.0** | ^2.19.0 |
+| **@jahia/ui-extender** | **1.2.0** | ^1.2.0 |
+
+Three defects follow:
+
+1. **i18next — quick-find is plausibly the sole registrant.** jcontent declares i18next but
+   never imports it, so webpack emits no provide module for it (no `from 'i18next'` anywhere in
+   `jcontent/src/javascript`, no `l("i18next",...)` in its `remoteEntry.js`). A sole registrant
+   is elected unconditionally, and this document's own live capture below records
+   `i18next loaded = from quickfind`. The platform then runs quick-find's bundled i18next
+   advertised as `0.0.0`, satisfying nobody's range. This is the direct ancestor of the
+   `o.on is not a function` failure documented further down.
+2. **@jahia/moonstone and @jahia/ui-extender are unguarded and below the host.** Not
+   hypothetical: issue #15 already contains `Unsatisfied version 2.17.5 from kfinder of shared
+   singleton module @jahia/moonstone`, twice, from a live page.
+3. **@apollo/client's demand floor drifts with the lockfile.** quick-find demands `^3.14.1`
+   while jcontent supplies `3.14.0`, so quick-find's own runtime warns on every load.
 
 ### Verified Behavior
 
@@ -456,7 +564,7 @@ The quick-find module needs to be installed/enabled on the specific site (via `r
 
 - Node version: must use Node 22 via `eval "$(mise activate bash)"` (Vite requires Node 20.19+)
 - Maven clean can fail on macOS due to xattr/DS_Store; use `xattr -cr target && find target -name '.DS_Store' -delete && rm -rf target` before `mvn install`
-- Working directory must be `/Users/romaingauthier/dev/git/quick-find` (not the jackrabbit parent)
+- Run from the repository root, not from a parent directory that also contains a `pom.xml`
 
 ## Quick Repro (Before Fix)
 
@@ -466,6 +574,22 @@ The quick-find module needs to be installed/enabled on the specific site (via `r
 
 ## Outcome
 
-**RESOLVED.** The crash was caused by two issues:
-1. **Version tie in singleton negotiation** — quick-find declared react 18.3.1 (same as host), winning the tie and providing its own bundled React instead of the host's. Fixed by setting `version: "0.0.0"` for all host-provided shared deps.
-2. **Modified source files** — `routes.tsx` and `features/register.ts` had been changed to use `window.jahia.i18n` instead of `import i18n from "i18next"`, silently breaking the modal mount. Fixed by restoring from GitHub `main`.
+**The page-load crash and the modal mount are RESOLVED.** The federation warnings are not.
+
+Two causes were fixed:
+
+1. **quick-find won the singleton election for react 18.3.1.** It collided with the host on the
+   same version key and took it via the lexicographic `uniqueName` tie-break, then supplied its
+   own bundled React. Mitigated by advertising `version: "0.0.0"` for seven libraries. Mitigated,
+   not eliminated: see the election rule and the nine-versus-seven gap above.
+2. **Modified source files.** `routes.tsx` and `features/register.ts` had been changed to use
+   `window.jahia.i18n` instead of `import i18n from "i18next"`, silently breaking the modal
+   mount. Fixed by restoring from GitHub `main`.
+
+**STILL OPEN — the federation singleton warnings**
+([Jahia/quick-find#15](https://github.com/Jahia/quick-find/issues/15)). The `0.0.0` override
+fixed none of the eight quick-find-named lines in that ticket. Every consumer range in them
+(`^16.x` react, `^19.x` i18next, `^1.x` moonstone, `^13.x` react-i18next) is unsatisfiable by
+**any** version present in the modern share scope, including `0.0.0`, so each line re-fires
+naming whichever module is elected. Closing #15 on the strength of the rename or the `0.0.0`
+config would be wrong.
