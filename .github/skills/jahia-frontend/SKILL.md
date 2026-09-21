@@ -61,7 +61,7 @@ const result = await client.query<{
   jcr: { nodesByCriteria: { nodes: Node[] } };
 }>({
   query: SEARCH_QUERY,
-  variables: { searchTerm, sitePath, language, limit, offset },
+  variables: { nodeConstraint, sitePath, language, limit, offset },
   fetchPolicy: "network-only",
 });
 
@@ -70,6 +70,8 @@ const { data } = useQuery(SEARCH_QUERY, { variables });
 ```
 
 Always use `fetchPolicy: 'network-only'` for search queries — stale cached data causes incorrect results.
+
+`nodeConstraint` is a clause tree the caller builds, never the raw string the user typed: `contains` parses its argument, so an exclamation mark, a parenthesis, an unclosed quote or a bare `OR` raises `Invalid full text search expression` and fails the whole constraint. See `jahia-graphql-frontend` for the builder.
 
 ---
 

@@ -4,8 +4,7 @@ export const JCR_NODES_BY_CRITERIA_QUERY = gql`
   query JCRNodesByCriteria(
     $limit: Int!
     $offset: Int!
-    $searchTerm: String!
-    $vSearchTerm: String!
+    $nodeConstraint: InputGqlJcrNodeConstraintInput!
     $sitePath: String!
     $language: String!
   ) {
@@ -18,15 +17,7 @@ export const JCR_NODES_BY_CRITERIA_QUERY = gql`
           paths: [$sitePath]
           pathType: ANCESTOR
           language: $language
-          nodeConstraint: {
-            any: [
-              { contains: $searchTerm }
-              { contains: $searchTerm, property: "j:tagList" },
-              # vSearchTerm (%term%) makes hyphenated queries work via LIKE/contains
-              { contains: $vSearchTerm},
-              { like: $vSearchTerm, property: "j:nodename" }
-            ]
-          }
+          nodeConstraint: $nodeConstraint
         }
       ) {
         nodes {

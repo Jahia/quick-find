@@ -23,6 +23,7 @@ export default defineConfig({
         specPattern: [
             'cypress/e2e/quickFind0Setup.cy.ts',
             'cypress/e2e/quickFindEdgeCases.cy.ts',
+            'cypress/e2e/quickFindSearchMatching.cy.ts',
             'cypress/e2e/quickFindUrlReverseLookup.cy.ts',
             'cypress/e2e/quickFindFeatures.cy.ts',
             'cypress/e2e/quickFindMainResources.cy.ts',

@@ -2,7 +2,7 @@
  * Shared factory for JCR-based search providers.
  *
  * All JCR providers (pages, media, main resources) follow the same query pattern:
- * `nodesByCriteria` with `searchTerm`, `sitePath`, `language`, `limit`, `offset`.
+ * `nodesByCriteria` with `nodeConstraint`, `sitePath`, `language`, `limit`, `offset`.
  * The only difference is the GraphQL document (which encodes the node type criteria).
  *
  * This factory avoids duplicating the search/pagination/stale-response logic
@@ -20,6 +20,7 @@ import {
   getSearchLanguage,
 } from "../../quick-find/shared/navigationUtils.ts";
 import { withStaleResponseFiltering } from "../providerUtils.ts";
+import { buildJcrSearchConstraint } from "../jcrSearchConstraint.ts";
 
 const PAGE_SIZE = 10;
 
@@ -47,10 +48,14 @@ export function createJcrSearchProvider(
   queryDoc: DocumentNode,
 ): QuickFindResultsProvider {
   return withStaleResponseFiltering(async (query, page) => {
+    // Blank input yields no constraint, and a criteria carrying no constraint matches
+    // every node under the site — so there is nothing to ask the repository for here.
+    const nodeConstraint = buildJcrSearchConstraint(query);
+    if (!nodeConstraint) {
+      return { hits: [], hasMore: false };
+    }
+
     const sitePath = `/sites/${getSiteKey()}`;
-    // Use SQL-like wildcard matching (%term%) so hyphenated queries still match
-    // via LIKE/contains instead of Lucene's hyphen-as-NOT interpretation.
-    const searchTerm = query;
 
     // Request PAGE_SIZE + 1 to check if there are more items to paginate
     const limit = PAGE_SIZE + 1;
@@ -60,8 +65,7 @@ export function createJcrSearchProvider(
     }>({
       query: queryDoc,
       variables: {
-        searchTerm,
-        vSearchTerm: "%" + searchTerm + "%",
+        nodeConstraint,
         sitePath,
         language: getSearchLanguage(),
         limit,

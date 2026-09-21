@@ -4,8 +4,7 @@ export const JCR_MEDIA_BY_CRITERIA_QUERY = gql`
   query JCRMediaByCriteria(
     $limit: Int!
     $offset: Int!
-    $searchTerm: String!
-    $vSearchTerm: String!
+    $nodeConstraint: InputGqlJcrNodeConstraintInput!
     $sitePath: String!
     $language: String!
   ) {
@@ -18,14 +17,7 @@ export const JCR_MEDIA_BY_CRITERIA_QUERY = gql`
           paths: [$sitePath]
           pathType: ANCESTOR
           language: $language
-          nodeConstraint: {
-            any: [
-              { contains: $searchTerm }
-              { contains: $searchTerm, property: "j:tagList" }
-              { contains: $vSearchTerm }
-              { like: $vSearchTerm, property: "j:nodename" }
-            ]
-          }
+          nodeConstraint: $nodeConstraint
         }
       ) {
         nodes {
