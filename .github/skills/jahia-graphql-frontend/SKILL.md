@@ -51,7 +51,7 @@ const result = await client.query<{
   jcr: { nodesByCriteria: { nodes: GqlJcrNode[] } };
 }>({
   query: MY_QUERY,
-  variables: { nodeConstraint, sitePath, language, limit, offset },
+  variables: { searchTerm, wildcardTerm, likePattern, sitePath, language, limit, offset },
   fetchPolicy: "network-only",
 });
 
@@ -68,34 +68,49 @@ const nodes = result.data?.jcr?.nodesByCriteria?.nodes ?? [];
 
 ## JCR Content Search — `nodesByCriteria`
 
-The standard pattern for searching JCR nodes by type and free-text content. The whole
-constraint is built in TypeScript and passed as **one variable** — see the next section
-for why the user's text must never reach `contains` directly:
+The standard pattern for searching JCR nodes by type and free-text content. Keep the
+constraint **fixed in the document** and pass only sanitized scalars, so a reader of the
+query file can see the call the repository receives. See the next section for why the
+user's text must never reach `contains` directly:
 
 ```graphql
 query SearchContent(
-  $nodeConstraint: InputGqlJcrNodeConstraintInput!
+  $searchTerm: String! # sanitized words; the repository ANDs them
+  $wildcardTerm: String! # the same words wrapped in *, for substring matching
+  $likePattern: String! # %escaped raw text%
   $sitePath: String!
   $language: String!
   $limit: Int!
   $offset: Int!
 ) {
-  jcr {
+  jcr(workspace: EDIT) {
     nodesByCriteria(
+      limit: $limit
+      offset: $offset
       criteria: {
         nodeType: "jnt:page"
         paths: [$sitePath]
-        nodeConstraint: $nodeConstraint
+        pathType: ANCESTOR
+        language: $language
+        # Five clauses and not one: contains reads the folded, stemmed Lucene
+        # index and like reads the raw stored value, so each clause catches
+        # input the others miss.
+        nodeConstraint: {
+          any: [
+            { contains: $searchTerm }
+            { contains: $wildcardTerm }
+            { contains: $searchTerm, property: "j:tagList" }
+            { like: $likePattern, property: "jcr:title", function: LOWER_CASE }
+            { like: $likePattern, property: "j:nodename", function: LOWER_CASE }
+          ]
+        }
       }
-      size: $limit
-      offset: $offset
-      language: $language
     ) {
       nodes {
         uuid
         path
         name
-        displayName
+        displayName(language: $language)
         primaryNodeType {
           name
         }
@@ -107,13 +122,18 @@ query SearchContent(
 
 Standard variable shapes:
 
-| Variable         | Value pattern                                          |
-| ---------------- | ------------------------------------------------------ |
-| `nodeConstraint` | The clause tree built from the user's query (see below) |
-| `sitePath`       | `/sites/{siteKey}`                                      |
-| `language`       | Locale code (e.g. `en`, `fr`)                            |
-| `limit`          | Page size + 1 to detect `hasMore`                        |
-| `offset`         | `page * pageSize`                                        |
+| Variable       | Value pattern                                       |
+| -------------- | --------------------------------------------------- |
+| `searchTerm`   | Sanitized words joined by a space                    |
+| `wildcardTerm` | The same words, each wrapped in `*` from 3 chars up  |
+| `likePattern`  | `%` + escaped, lowercased raw text + `%`             |
+| `sitePath`     | `/sites/{siteKey}`                                   |
+| `language`     | Locale code (e.g. `en`, `fr`)                        |
+| `limit`        | Page size + 1 to detect `hasMore`                    |
+| `offset`       | `page * pageSize`                                    |
+
+A `function` value is a GraphQL **enum**, so it is written `LOWER_CASE` in the document
+and never quoted.
 
 Request `pageSize + 1` items: if you receive more than `pageSize`, there are more pages — slice to `pageSize` before rendering.
 
@@ -138,8 +158,8 @@ reasons, all against Jahia 8.2:
 4. **A `like` pattern carries the user's text, where `%` and `_` are wildcards.** A user
    typing `%` matches every node under the site. Escape `\`, `%` and `_`.
 
-Build the constraint in a pure, dependency-free module so it can be reasoned about and
-exercised on its own:
+Sanitize in a pure, dependency-free module, and let it produce the three scalars the
+document above declares:
 
 ```ts
 // The combining-mark range is written with \u escapes: the marks themselves are
@@ -152,77 +172,77 @@ const fold = (s: string) =>
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .normalize("NFC");
+
+// \p{L}\p{N}, not \w: \w stays ASCII-only even under the u flag and would erase every
+// Cyrillic, Greek, Arabic, Hebrew or CJK term, plus the letters NFD leaves
+// undecomposed such as `ß` and `ø`.
+const searchTokens = (s: string) =>
+  fold(s)
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}_\s]/gu, " ")
+    .split(/\s+/)
+    .filter(Boolean);
+
 const escapeLike = (s: string) => s.replace(/[\\%_]/g, (m) => `\\${m}`);
 
 // Below this length a leading-wildcard term costs the most and discriminates the least.
 const MIN_WILDCARD_TOKEN_LENGTH = 3;
 
-export function buildSearchConstraint(input: string) {
-  const lower = input.trim().toLowerCase();
-  if (!lower) {
-    // Send no query at all. Not an empty constraint: the repository refuses one —
-    // `{any: []}` raises `InvalidQueryException: Constraints must not be null`, and
-    // `{}` raises "at least one constraint field is expected".
+export function buildSearchVariables(input: string) {
+  const tokens = searchTokens(input);
+  if (tokens.length === 0) {
+    // Send no query at all. `contains ""` and `contains " "` both raise
+    // `Invalid full text search expression`, and an empty constraint is refused too:
+    // `{any: []}` raises `InvalidQueryException: Constraints must not be null`.
     return null;
   }
 
-  // \p{L}\p{N}, not \w: \w stays ASCII-only even under the u flag and would erase
-  // every Cyrillic, Greek, Arabic, Hebrew or CJK term.
-  const tokens = fold(lower)
-    .replace(/[^\p{L}\p{N}_\s]/gu, " ")
-    .split(/\s+/)
-    .filter(Boolean);
-  const fullText = tokens.join(" ");
-  // Repeated inner whitespace is collapsed, to read like the stored value; the
-  // pattern otherwise keeps the raw text, since `like` is the only clause that
-  // still sees punctuation.
-  const pattern = `%${escapeLike(lower.replace(/\s+/g, " "))}%`;
-
   return {
-    any: [
-      // Analyzed: folds accents and matches a complete word despite stemming.
-      ...(fullText ? [{ contains: fullText }] : []),
-      // Unanalyzed substring match, one clause per token because a wildcard term is
-      // compared to a single index term. The nested `all` keeps the tokens ANDed:
-      // as direct members of `any` they would turn a two-word search into an OR.
-      // EVERY token joins the group. A token left out of it re-widens what the
-      // analyzed clause narrowed: with short tokens dropped, `quokka zz` matched a
-      // node holding only `quokka`. A short token joins in its analyzed form.
-      ...(tokens.length
-        ? [
-            {
-              all: tokens.map((t) => ({
-                contains:
-                  t.length >= MIN_WILDCARD_TOKEN_LENGTH ? `*${t}*` : t,
-              })),
-            },
-          ]
-        : []),
-      // j:tagList is `nofulltext`: out of the aggregated node text, own full-text field.
-      ...(fullText ? [{ contains: fullText, property: "j:tagList" }] : []),
-      // LOWER_CASE lowercases the property, not the pattern — lowercase it yourself.
-      { like: pattern, property: "jcr:title", function: "LOWER_CASE" },
-      { like: pattern, property: "j:nodename", function: "LOWER_CASE" },
-    ],
+    // Analyzed: folds accents and matches a complete word despite stemming. Several
+    // words inside ONE expression are ANDed by the repository, so a second word
+    // narrows the result — measured, `*chat* haras` matches and `*chat* zz` does not.
+    // That is why one expression is enough and a clause per word is not needed.
+    searchTerm: tokens.join(" "),
+    // Unanalyzed, so it matches a fragment inside a word — and so the caller has to
+    // fold and lowercase first. EVERY word joins it, including one under three
+    // characters, which keeps its analyzed form: leave the short ones out and the
+    // expression re-widens what the rest narrowed, and `quokka zz` comes back with a
+    // node holding only `quokka`.
+    wildcardTerm: tokens
+      .map((t) => (t.length >= MIN_WILDCARD_TOKEN_LENGTH ? `*${t}*` : t))
+      .join(" "),
+    // LOWER_CASE lowercases the property, not the pattern — lowercase it yourself.
+    // Repeated inner whitespace is collapsed, to read like the stored value; the
+    // pattern otherwise keeps the raw text, since `like` is the only clause that
+    // still sees punctuation. `%` and `_` are escaped because they are wildcards
+    // inside a `like` pattern: a user typing `%` would otherwise match every node.
+    likePattern: `%${escapeLike(input.trim().toLowerCase().replace(/\s+/g, " "))}%`,
   };
 }
 ```
 
+Gate the search box on the **same** definition of a searchable character that the
+tokenizer uses: count `/[\p{L}\p{N}_]/gu` in the folded input, not raw length. A gate on
+raw length admits `%%%%`, which reduces to no word at all, and the builder then has
+nothing to send. With the gate and the builder agreeing, the `null` above is unreachable
+in normal use and stays only as a defensive guard.
+
 Two more measured traps. A wildcard term skips the analyzer, so it matches the **stem**
 held in the index: `*chateau*` matches "Châteaux et Haras" and `*chateaux*` does not —
-keep the plain analyzed clause next to the wildcard ones. And `%term%` is not a wildcard
-in full text: `%` has no meaning there, it only happens to shield the term from the
-parser, which explicit sanitization does properly.
+keep the plain analyzed term next to the wildcard one. And `%term%` is not a wildcard in
+full text: `%` has no meaning there, it only happens to shield the term from the parser,
+which explicit sanitization does properly.
 
-Two traps the shape above encodes, both measured by removing the line and searching
-again. `fold` has to recompose: NFD alone turns a Hangul syllable into jamo that the
+One trap the shape above encodes, measured by removing the line and searching again.
+`fold` has to recompose: NFD alone turns a Hangul syllable into jamo that the
 combining-mark range does not strip, and the decomposed term then matches an index
-holding the composed form not at all. And the nested `all` group has to carry every
-token: leave the short ones out and the group re-widens what the analyzed clause
-narrowed, so `quokka zz` comes back with a node that holds only `quokka`.
+holding the composed form not at all.
 
-The live implementation is
-`src/javascript/quick-find-providers/jcrSearchConstraint.ts`.
+The live implementation is split in two.
+`src/javascript/quick-find/shared/searchTextUtils.ts` holds the fold, the tokenizer and
+the character count, so the minimum-length gate and the providers share one definition;
+`src/javascript/quick-find-providers/jcr/jcrSearchProvider.ts` builds the three scalars
+from the tokens.
 
 ---
 

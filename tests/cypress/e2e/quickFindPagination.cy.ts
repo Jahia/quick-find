@@ -124,21 +124,21 @@ describe('QuickFind pagination behavior', () => {
     });
 
     it('keeps only the latest query results when a previous request resolves late', () => {
-        // The providers send a nodeConstraint, not the raw term: the typed text
-        // survives inside it as the lowercased `like` pattern, so the request is
-        // recognized by looking for that text in the serialized constraint.
-        const constraintHolds = (req: {body?: {variables?: {nodeConstraint?: unknown}}}, term: string) =>
-            JSON.stringify(req.body?.variables?.nodeConstraint ?? null).includes(term.toLowerCase());
+        // The providers send sanitized scalars, not the raw term: the typed text
+        // survives among them as the lowercased `likePattern`, so the request is
+        // recognized by looking for that text in the serialized variables.
+        const variablesHold = (req: {body?: {variables?: unknown}}, term: string) =>
+            JSON.stringify(req.body?.variables ?? null).includes(term.toLowerCase());
 
         cy.intercept('POST', '**/modules/graphql', req => {
-            if (constraintHolds(req, `quick-find pagination ${token}`)) {
+            if (variablesHold(req, `quick-find pagination ${token}`)) {
                 req.alias = 'staleSearch';
                 req.on('response', response => {
                     response.setDelay(1200);
                 });
             }
 
-            if (constraintHolds(req, staleNoMatchQuery)) {
+            if (variablesHold(req, staleNoMatchQuery)) {
                 req.alias = 'latestSearch';
             }
         });

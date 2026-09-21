@@ -20,6 +20,7 @@ import { QuickFindHeader } from "../QuickFindHeader/QuickFindHeader.tsx";
 import { useSearchOrchestration } from "../shared/useSearchOrchestration.ts";
 import { ResultsSection } from "../ResultsSection/ResultsSection.tsx";
 import { getMinSearchChars } from "../shared/configUtils.ts";
+import { countSearchableChars } from "../shared/searchTextUtils.ts";
 import styles from "../shared/layout.module.css";
 import s from "./QuickFindPanel.module.css";
 
@@ -39,6 +40,11 @@ export const QuickFindPanel = ({ focusOnField, onNavigate }: QuickFindPanelProps
 
   const trimmedQuery = searchValue.trim();
   const minChars = getMinSearchChars();
+  // The same count useSearchOrchestration gates on. Comparing the raw length here
+  // instead would leave the panel blank for a term such as `c++`: the hint hides
+  // because 3 characters were typed, while no search ran because only 1 of them is
+  // searchable, so there is no "no results" state either.
+  const searchableChars = countSearchableChars(searchValue);
 
   // Aggregate loading/results state across all providers to decide whether
   // to show the global "no results" empty state.
@@ -46,7 +52,7 @@ export const QuickFindPanel = ({ focusOnField, onNavigate }: QuickFindPanelProps
   const hasAnyResults = providers.some((d) => d.state.allHits.length > 0);
 
   const showGlobalNoResults =
-    trimmedQuery.length >= minChars &&
+    searchableChars >= minChars &&
     currentQuery === trimmedQuery &&
     !isAnyLoading &&
     !hasAnyResults;
@@ -70,7 +76,7 @@ export const QuickFindPanel = ({ focusOnField, onNavigate }: QuickFindPanelProps
         data-quick-find-scroll-container="true"
           >
               {/* ── Empty state ── */}
-              {trimmedQuery.length < minChars && !hasAnyResults && (
+              {searchableChars < minChars && !hasAnyResults && (
               <div className={s.emptyState} data-quick-find-empty-state="hint">
                   <Search size="big"/>
                   <Typography variant="subheading" component="p">

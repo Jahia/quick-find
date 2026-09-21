@@ -28,11 +28,12 @@ const PANEL_SELECTOR = '[data-quick-find-panel="true"]';
 const HINT_STATE_SELECTOR = '[data-quick-find-empty-state="hint"]';
 const NO_RESULTS_STATE_SELECTOR = '[data-quick-find-empty-state="no-results"]';
 
-// Three characters is the shortest token the constraint builder still wraps in
-// wildcards, so the gate has to be at 3 for this spec. These are also the values
-// quickFindEdgeCases leaves behind and every later spec runs under, so there is
-// nothing to restore afterwards: an after() hook putting the shipped 4 / 300 back
-// would change the environment for the seven specs that follow this one.
+// Three characters is the shortest token the variable builder still wraps in
+// wildcards, so the gate has to be at 3 for this spec. It is also the shipped
+// default, and the value quickFindEdgeCases leaves behind and every later spec runs
+// under, so there is nothing to restore afterwards: only the debounce is lowered
+// here, and an after() hook putting the shipped 300 back would change the
+// environment for the specs that follow this one.
 const SPEC_MIN_SEARCH_CHARS = 3;
 const SPEC_SEARCH_DEBOUNCE = 80;
 
@@ -210,31 +211,66 @@ describe('QuickFind search matching', () => {
         const beforeWildcards = {value: 0};
         countJcrSearchRequests(requests);
 
-        // The percent sign an editor typed does not keep the term from matching.
-        // This hit on its own proves nothing about the escaping: measured, a bare
-        // contains on "50" matches the same fixture, so the clause that answered
-        // cannot be told from here. The escaping is proved by the two expectNoMatch
-        // cases below, which would return every node of the site unescaped.
-        expectMatches('50%', [percentTitle]);
+        // The percent sign an editor typed does not keep the term from matching. The
+        // word is typed with it because "50%" carries two searchable characters and
+        // would not reach the gate on its own. This hit proves nothing about the
+        // escaping either: measured, a bare contains on "50" matches the same fixture,
+        // so the clause that answered cannot be told from here. The escaping is proved
+        // by the expectNoMatch case below.
+        expectMatches('50% rebate', [percentTitle]);
 
         // The count is snapshotted here, after the searches this phase fired: what the
-        // assertion below has to prove is that the two wildcard terms fired a search of
-        // their own, and a counter read from zero would be satisfied by this one.
+        // assertion below has to prove is that the underscore term fired a search of
+        // its own, and a counter read from zero would be satisfied by this one.
         cy.then(() => {
             beforeWildcards.value = requests.value;
         });
 
-        // Unescaped, "%%%%" and "____" are SQL wildcards and would return every node
-        // of the site. The delta proves the empty panel is an empty result set and
-        // not a query that never left.
-        expectNoMatch('%%%%');
+        // The underscore is a searchable character, so "____" still reaches the gate
+        // and still sends a query — unlike "%%%%", which the next test covers.
+        // Unescaped, four underscores are four SQL wildcards and the like clauses would
+        // return every node of the site; escaped, the same clauses ask for a title
+        // holding four literal underscores and find none. escapeLike escapes `\`, `%`
+        // and `_` in one pass, so this case covers the percent sign as well. The delta
+        // proves the empty panel is an empty result set and not a query that never left.
         expectNoMatch('____');
 
         cy.then(() => {
             expect(
                 requests.value - beforeWildcards.value,
-                'JCR searches fired for the wildcard characters'
+                'JCR searches fired for the underscore term'
             ).to.be.greaterThan(0);
+        });
+    });
+
+    it('issues no query for a term made only of punctuation', () => {
+        const requests = {value: 0};
+        const beforePunctuation = {value: 0};
+        countJcrSearchRequests(requests);
+
+        // Positive control first: the counter is known to move in this test, so the
+        // delta below reads as a real negative and not as a broken interception.
+        expectMatches('chateaux', [accentTitle]);
+
+        cy.then(() => {
+            beforePunctuation.value = requests.value;
+        });
+
+        // The gate counts searchable characters — letters, digits and the underscore —
+        // and "%%%%" holds none, so no query is built from it. This is what removes the
+        // need for a placeholder term: a query is never built from input that reduces
+        // to no word, and an empty contains expression raises
+        // "Invalid full text search expression".
+        searchFresh('%%%%');
+        cy.get(HINT_STATE_SELECTOR, {timeout: MEDIUM_TIMEOUT}).should('be.visible');
+
+        // A query would leave after the debounce, so the negative only carries meaning
+        // once that delay has passed.
+        cy.wait(SHORT_TIMEOUT);
+        cy.then(() => {
+            expect(requests.value - beforePunctuation.value, 'JCR searches fired for a punctuation-only term').to.equal(
+                0
+            );
         });
     });
 
@@ -243,14 +279,17 @@ describe('QuickFind search matching', () => {
         // "C++": measured, a contains clause matches this fixture, so the case does
         // not ride on the like clauses and does not isolate them. No case in this
         // spec isolates a like clause; what is asserted here is that a term written
-        // with punctuation still finds the page instead of failing the query.
-        expectMatches('c++', [rawValueTitle]);
+        // with punctuation still finds the page instead of failing the query. The
+        // second word is typed because "c++" holds one searchable character and would
+        // not reach the gate on its own.
+        expectMatches('c++ handbook', [rawValueTitle]);
     });
 
     it('requires every word typed, whatever their case', () => {
-        // The wildcard clauses sit in a nested all group, so a second word narrows the
-        // result instead of widening it: the node holding both words answers, and the
-        // two nodes holding one word each do not.
+        // Both words go into one contains expression, and the repository ANDs the words
+        // inside an expression, so a second word narrows the result instead of widening
+        // it: the node holding both words answers, and the two nodes holding one word
+        // each do not.
         expectMatches('quokka narwhal', [bothWordsTitle]);
         expectAbsent([firstWordTitle, secondWordTitle]);
 
@@ -265,12 +304,13 @@ describe('QuickFind search matching', () => {
     });
 
     it('requires a second word that is too short to carry wildcards', () => {
-        // "zz" is below the three-character gate, so it joins the nested all group in
+        // "zz" is shorter than three characters, so it joins the wildcard expression in
         // its analyzed form instead of being wrapped in wildcards. It has to join it:
-        // a group holding "*quokka*" alone re-widens what the analyzed clause
+        // an expression holding "*quokka*" alone re-widens what the other clauses
         // narrowed, and this query then returns the two quokka nodes the test above
-        // lists. Measured live, the constraint built here returns nothing, and
-        // dropping the short token from the group is the defect this case catches.
+        // lists. Measured live, contains "*chat* zz" returns nothing where
+        // contains "*chat* haras" returns the node, and dropping the short word from
+        // the expression is the defect this case catches.
         expectNoMatch('quokka zz');
     });
 
