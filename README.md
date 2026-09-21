@@ -81,7 +81,7 @@ All settings are defined in the OSGi configuration file `org.jahia.pm.modules.qu
 
 | Property                                   | Default | Description                                         |
 | ------------------------------------------ | ------- | --------------------------------------------------- |
-| `minSearchChars`                           | 3       | Minimum characters before search fires              |
+| `minSearchChars`                           | 3       | Minimum searchable characters (letters, digits, `_`) before search fires |
 | `defaultDisplayedResults`                  | 5       | Initial results per section before "Show more"      |
 | `augmentedFindDelayInTypingToLaunchSearch` | 300     | Debounce delay in ms (augmented search)             |
 | `jcrFindDelayInTypingToLaunchSearch`       | 300     | Debounce delay in ms (JCR fallback)                 |

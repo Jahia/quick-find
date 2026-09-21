@@ -124,17 +124,21 @@ describe('QuickFind pagination behavior', () => {
     });
 
     it('keeps only the latest query results when a previous request resolves late', () => {
-        cy.intercept('POST', '**/modules/graphql', req => {
-            const searchTerm = req.body?.variables?.searchTerm;
+        // The providers send sanitized scalars, not the raw term: the typed text
+        // survives among them as the lowercased `likePattern`, so the request is
+        // recognized by looking for that text in the serialized variables.
+        const variablesHold = (req: {body?: {variables?: unknown}}, term: string) =>
+            JSON.stringify(req.body?.variables ?? null).includes(term.toLowerCase());
 
-            if (searchTerm === `quick-find pagination ${token}`) {
+        cy.intercept('POST', '**/modules/graphql', req => {
+            if (variablesHold(req, `quick-find pagination ${token}`)) {
                 req.alias = 'staleSearch';
                 req.on('response', response => {
                     response.setDelay(1200);
                 });
             }
 
-            if (searchTerm === staleNoMatchQuery) {
+            if (variablesHold(req, staleNoMatchQuery)) {
                 req.alias = 'latestSearch';
             }
         });

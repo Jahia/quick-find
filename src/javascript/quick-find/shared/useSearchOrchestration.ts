@@ -24,6 +24,7 @@ import {
   type SearchHit,
 } from "../../quick-find-providers/types.ts";
 import { getMinSearchChars, getDebounceDelay } from "./configUtils.ts";
+import { countSearchableChars } from "./searchTextUtils.ts";
 
 // ── Per-provider state ──
 // Each provider gets its own independent state slice, keyed by the provider's
@@ -259,7 +260,11 @@ export const useSearchOrchestration = (
   const executeSearch = useCallback(
     (query: string) => {
       const trimmed = query.trim();
-      if (trimmed.length < getMinSearchChars()) {
+      // Searchable characters, not keystrokes: a term made only of punctuation reduces
+      // to no word a full-text query can carry, and sending it would raise
+      // `Invalid full text search expression`. So "%%%%", "????" and "!!!!" never start
+      // a search, while "cafe" and "page models" are untouched.
+      if (countSearchableChars(query) < getMinSearchChars()) {
         return;
       }
 
@@ -334,7 +339,7 @@ export const useSearchOrchestration = (
       debounceRef.current = null;
     }
 
-    if (searchValue.trim().length < getMinSearchChars()) {
+    if (countSearchableChars(searchValue) < getMinSearchChars()) {
       resetAll();
       return;
     }
@@ -368,7 +373,7 @@ export const useSearchOrchestration = (
 
     if (
       !debounceRef.current &&
-      searchValue.trim().length >= getMinSearchChars()
+      countSearchableChars(searchValue) >= getMinSearchChars()
     ) {
       executeSearchRef.current(searchValue);
     }
