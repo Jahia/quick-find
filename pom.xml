@@ -25,6 +25,13 @@
         </license>
     </licenses>
 
+    <scm>
+        <connection>scm:git:git@github.com:Jahia/quick-find.git</connection>
+        <developerConnection>scm:git:git@github.com:Jahia/quick-find.git</developerConnection>
+        <url>https://github.com/Jahia/quick-find</url>
+        <tag>HEAD</tag>
+    </scm>
+
 
     <properties>
         <jahia-depends>default,graphql-dxm-provider,jcontent=3.7.1</jahia-depends>
