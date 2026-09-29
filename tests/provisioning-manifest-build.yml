@@ -1,6 +1,8 @@
 - addMavenRepository: 'https://devtools.jahia.com/nexus/content/groups/enterprise/@id=jahia-enterprise@snapshots'
   username: 'NEXUS_USERNAME'
   password: 'NEXUS_PASSWORD'
+# quick-find needs jcontent 3.7.1 or later. installOrUpgradeBundle skips this install when a more recent jcontent is already installed.
+- installOrUpgradeBundle: 'mvn:org.jahia.modules/jcontent/3.7.1'
 - installBundle:
       - 'mvn:org.jahia.pm.modules/quick-find'
       - 'file:./artifacts/quick-find-test-module-*.jar'

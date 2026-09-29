@@ -2,6 +2,8 @@
 
 A Spotlight-style search modal for [Jahia CMS](https://www.jahia.com/) that lets editors quickly find and navigate to any content, page, media, feature, or URL directly from the authoring interface. Open it with **⌘K** (macOS) or **Ctrl+K** (Windows/Linux) and start typing — results appear instantly across multiple search providers.
 
+**Requirements**: jcontent 3.7.1 or later. If your Jahia has an older jcontent, upgrade jcontent from the Jahia Store before you install QuickFind.
+
 ## Known Issues
 
 - GraphQL API field placement may not be ideal yet: `fuzzyUrlAndPathLookup` was added at the query root.
