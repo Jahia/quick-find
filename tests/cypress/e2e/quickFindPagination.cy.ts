@@ -2,6 +2,7 @@ import {
     createMediaViaGraphql,
     createPageViaGraphql,
     createTestToken,
+    graphqlOperations,
     MEDIUM_TIMEOUT,
     RESULT_ROW_SELECTOR,
     searchInModal,
@@ -126,9 +127,12 @@ describe('QuickFind pagination behavior', () => {
     it('keeps only the latest query results when a previous request resolves late', () => {
         // The providers send sanitized scalars, not the raw term: the typed text
         // survives among them as the lowercased `likePattern`, so the request is
-        // recognized by looking for that text in the serialized variables.
-        const variablesHold = (req: {body?: {variables?: unknown}}, term: string) =>
-            JSON.stringify(req.body?.variables ?? null).includes(term.toLowerCase());
+        // recognized by looking for that text in the serialized variables of any
+        // operation it carries.
+        const variablesHold = (req: {body?: unknown}, term: string) =>
+            graphqlOperations(req.body).some(operation =>
+                JSON.stringify(operation.variables ?? null).includes(term.toLowerCase())
+            );
 
         cy.intercept('POST', '**/modules/graphql', req => {
             if (variablesHold(req, `quick-find pagination ${token}`)) {

@@ -20,6 +20,17 @@ export const RESULT_ROW_SELECTOR = '[data-quick-find-result-row="true"][tabindex
 export const SHOW_MORE_SELECTOR = '[data-quick-find-show-more="true"]';
 export const SEARCH_INPUT_SELECTOR = '[data-quick-find-search-input-wrapper="true"] input[type="search"]';
 
+export type GraphqlOperation = {operationName?: string; variables?: Record<string, unknown>};
+
+// The operations carried by an intercepted POST to /modules/graphql. The modal queries
+// through jContent's Apollo client, which batches: one search sends a single request whose
+// body is an array such as [getCurrentUser, JCRMediaByCriteria, JCRNodesByCriteria,
+// JCRMainResourcesByCriteria], so `req.body.operationName` is undefined there.
+export const graphqlOperations = (body: unknown): GraphqlOperation[] =>
+    (Array.isArray(body) ? body : [body]).filter(
+        (operation): operation is GraphqlOperation => typeof operation === 'object' && operation !== null
+    );
+
 const gqlAuth = () => ({user: 'root', pass: Cypress.env('SUPER_USER_PASSWORD')});
 
 const ADD_NODE_MUTATION = `

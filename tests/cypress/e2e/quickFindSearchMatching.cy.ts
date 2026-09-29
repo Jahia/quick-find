@@ -14,6 +14,7 @@
 import {
     createPageViaGraphql,
     createTestToken,
+    graphqlOperations,
     LONG_TIMEOUT,
     MEDIUM_TIMEOUT,
     openSearchModal,
@@ -40,13 +41,12 @@ const SPEC_SEARCH_DEBOUNCE = 80;
 // The three JCR providers each send one of these operations per search.
 const JCR_SEARCH_OPERATIONS = ['JCRNodesByCriteria', 'JCRMediaByCriteria', 'JCRMainResourcesByCriteria'];
 
-const countJcrSearchRequests = (counter: {value: number}) => {
+// Counts operations, not requests: the three searches usually travel in one batched request.
+const countJcrSearches = (counter: {value: number}) => {
     cy.intercept('POST', '**/modules/graphql', req => {
-        const operationName = typeof req.body?.operationName === 'string' ? req.body.operationName : '';
-
-        if (JCR_SEARCH_OPERATIONS.includes(operationName)) {
-            counter.value++;
-        }
+        counter.value += graphqlOperations(req.body).filter(operation =>
+            JCR_SEARCH_OPERATIONS.includes(operation.operationName ?? '')
+        ).length;
     });
 };
 
@@ -209,7 +209,7 @@ describe('QuickFind search matching', () => {
     it('treats a percent sign and an underscore as text, not as wildcards', () => {
         const requests = {value: 0};
         const beforeWildcards = {value: 0};
-        countJcrSearchRequests(requests);
+        countJcrSearches(requests);
 
         // The percent sign an editor typed does not keep the term from matching. The
         // word is typed with it because "50%" carries two searchable characters and
@@ -246,7 +246,7 @@ describe('QuickFind search matching', () => {
     it('issues no query for a term made only of punctuation', () => {
         const requests = {value: 0};
         const beforePunctuation = {value: 0};
-        countJcrSearchRequests(requests);
+        countJcrSearches(requests);
 
         // Positive control first: the counter is known to move in this test, so the
         // delta below reads as a real negative and not as a broken interception.
@@ -254,6 +254,7 @@ describe('QuickFind search matching', () => {
 
         cy.then(() => {
             beforePunctuation.value = requests.value;
+            expect(beforePunctuation.value, 'JCR searches fired for the positive control').to.be.greaterThan(0);
         });
 
         // The gate counts searchable characters — letters, digits and the underscore —
@@ -316,7 +317,7 @@ describe('QuickFind search matching', () => {
 
     it('issues no query while the input holds only whitespace', () => {
         const requests = {value: 0};
-        countJcrSearchRequests(requests);
+        countJcrSearches(requests);
 
         openSearchModal();
         cy.get('@searchInput').clear();
