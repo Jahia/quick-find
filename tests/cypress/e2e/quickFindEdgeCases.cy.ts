@@ -9,7 +9,7 @@ import {
     visitQuickFindSiteInJContent
 } from './quickFindProviders.helpers';
 
-describe('QuickFind edge cases and shortcuts', () => {
+describe('QuickFind edge cases', () => {
     const token = createTestToken();
     const pageTitle = `quick-find edge title ${token}`;
 
@@ -58,16 +58,6 @@ describe('QuickFind edge cases and shortcuts', () => {
 
         cy.get('body').type('{esc}');
         cy.get('[data-quick-find-panel="true"]').should('not.exist');
-    });
-
-    it('toggles modal visibility with Ctrl+K', () => {
-        openSearchModal();
-
-        cy.get('body').type('{ctrl}k');
-        cy.get('[data-quick-find-panel="true"]').should('not.exist');
-
-        cy.get('body').type('{ctrl}k');
-        cy.get('[data-quick-find-panel="true"]', {timeout: MEDIUM_TIMEOUT}).should('be.visible');
     });
 
     it('does not trigger search below min chars and starts searching at min chars', () => {

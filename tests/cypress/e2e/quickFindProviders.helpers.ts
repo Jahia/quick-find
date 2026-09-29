@@ -371,9 +371,50 @@ const waitForJContentIdle = () => {
     cy.get(JCONTENT_LOADER_OVERLAY_SELECTOR, {timeout: 30000}).should('not.exist');
 };
 
+// The Search entry quick-find adds to the level-one navigation (NavSearchButton in routes.tsx).
+// Moonstone's PrimaryNavItem renders its label as the <li> title.
+const SEARCH_NAV_ITEM_SELECTOR = '.moonstone-primaryNav .moonstone-primaryNavItem[title="Search"]';
+const MODAL_SELECTOR = '[data-quick-find-modal="true"]';
+const SEARCH_NAV_CLICKS = 10;
+
+// Resolves true as soon as the modal renders, false once withinMs has passed without it.
+// Moonstone renders nothing while closed, so "the node exists" is an exact test for "open".
+const modalRenders = (win: Cypress.AUTWindow, withinMs: number) =>
+    new Cypress.Promise<boolean>(resolve => {
+        const deadline = Date.now() + withinMs;
+        const check = () => {
+            if (win.document.querySelector(MODAL_SELECTOR)) {
+                resolve(true);
+            } else if (Date.now() > deadline) {
+                resolve(false);
+            } else {
+                setTimeout(check, 50);
+            }
+        };
+
+        check();
+    });
+
+// The button dispatches quick-find:open-search, which maps to setIsOpen(true), so clicking
+// it again while the modal is closed is safe. A click that lands before QuickFindModal's
+// effect has attached the listener is lost, hence the repeat until the modal renders. The
+// modal is checked before each click because, once open, its overlay covers the navigation.
+const clickSearchInPrimaryNav = (clicksLeft: number) => {
+    cy.get(SEARCH_NAV_ITEM_SELECTOR, {timeout: LONG_TIMEOUT}).click();
+    cy.window()
+        .then({timeout: 3000}, win => modalRenders(win, 1000))
+        .then(rendered => {
+            if (rendered) {
+                return;
+            }
+
+            expect(clicksLeft - 1, 'Search clicks left before the modal opens').to.be.greaterThan(0);
+            clickSearchInPrimaryNav(clicksLeft - 1);
+        });
+};
+
 export const openSearchModal = () => {
     const panelSelector = '[data-quick-find-panel="true"]';
-    const modalSelector = '[data-quick-find-modal="true"]';
 
     waitForJContentIdle();
 
@@ -382,22 +423,9 @@ export const openSearchModal = () => {
     // attached the listener. The generous timeout covers ensureI18nReady()'s network calls.
     cy.get('#quick-find-search-modal', {timeout: 30000}).should('exist');
 
-    // The dispatch lives inside .should() so it is REPLAYED on every retry: a listener that
-    // had not attached yet on the first pass gets the event on a later one. Safe because
-    // quick-find:open-search maps to setIsOpen(true) — re-dispatching an open modal is a
-    // no-op. Never send Ctrl+K from here: it is setIsOpen(prev => !prev), and a harness
-    // cannot read isOpen synchronously, so it would close a modal that had opened but not
-    // yet committed. Moonstone renders nothing while closed, so "the node exists" is an
-    // exact test for "open".
-    cy.window({timeout: LONG_TIMEOUT}).should(win => {
-        win.dispatchEvent(new win.CustomEvent('quick-find:open-search'));
-        expect(
-            win.document.querySelector(modalSelector),
-            'quick-find modal — open event replayed until the listener answers'
-        ).to.not.equal(null);
-    });
+    clickSearchInPrimaryNav(SEARCH_NAV_CLICKS);
 
-    cy.get(modalSelector, {timeout: LONG_TIMEOUT}).should('be.visible');
+    cy.get(MODAL_SELECTOR, {timeout: LONG_TIMEOUT}).should('be.visible');
     cy.get(panelSelector, {timeout: LONG_TIMEOUT}).should('be.visible');
     cy.get(SEARCH_INPUT_SELECTOR, {timeout: LONG_TIMEOUT}).as('searchInput').should('be.visible');
 };

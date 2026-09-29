@@ -104,8 +104,10 @@ applied to a modal that has opened but not yet committed its render, it closes i
 renders nothing while closed, so the node leaves the DOM entirely and the next assertion waits its
 full timeout for something nothing will reopen.
 
-Drive the open with the **idempotent** event, replayed inside a retrying assertion, so a listener
-that had not attached on the first pass receives it on a later one.
+The tests therefore never use Ctrl+K. They open the modal the way an editor does, by clicking
+**Search** in the level-one navigation. That button dispatches the **idempotent** event, so the
+click is repeated until the modal renders, and a listener that had not attached on the first click
+receives a later one.
 
 The reasoning that found this is the reusable part: **the assertion had already waited 10 seconds.**
 A React commit losing a race against one Cypress command is milliseconds late, not seconds. When a
