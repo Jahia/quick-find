@@ -58,7 +58,7 @@ Providers are framework-agnostic (no React hooks). They expose imperative factor
 
 ### Module Federation
 
-Vite builds with `@jahia/vite-federation-plugin`. Exposes `./init` entry. React/ReactDOM are shared singletons; i18next and react-i18next are explicitly **not** singletons.
+Vite builds with `@jahia/vite-federation-plugin`. Exposes `./init` entry. The plugin auto-shares **every** `dependencies` key as a singleton; the explicit `shared` block in `vite.config.ts` replaces those entries per key. Nine libraries ship as shared singletons, seven of them advertised as `version: "0.0.0"` so quick-find loses a contested election. `@jahia/moonstone` (2.19.0) and `@jahia/ui-extender` (1.2.0) are **not** covered by that guard. See `HANDOFF_RUNTIME_ISSUE.md`.
 
 ### Java Backend
 
@@ -85,7 +85,7 @@ Default config in `src/main/resources/META-INF/configurations/org.jahia.pm.modul
 
 ## Known Issues
 
-**Runtime crash (RESOLVED)**: Was caused by singleton version negotiation tie-breaking — quick-find declared the same React version as the host, winning the tie and providing its own React instance to all consumers. Fixed by setting `version: "0.0.0"` for all host-provided shared deps in `vite.config.ts`. See `HANDOFF_RUNTIME_ISSUE.md` for full investigation history and fix details.
+**Runtime crash (RESOLVED)**: Was caused by singleton version negotiation tie-breaking — quick-find declared the same React version as the host, winning the tie and providing its own React instance to all consumers. Mitigated by setting `version: "0.0.0"` for seven of the nine shared singletons in `vite.config.ts`. Election is loaded-first then highest, so this is a mitigation, not a guarantee. See `HANDOFF_RUNTIME_ISSUE.md` for full investigation history and fix details.
 
 ## AI Skills
 
