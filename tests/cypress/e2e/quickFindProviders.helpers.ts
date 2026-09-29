@@ -344,9 +344,38 @@ export const createTestToken = (date = new Date()) => {
 // Modal interaction helpers
 // ---------------------------------------------------------------------------
 
+// jContent paints a loader overlay over its main area while it loads: ContentLayout's
+// (z-index 19999) while a content list loads, then, after /pages redirects to /pages/home,
+// EditFrame's TransparentLoaderOverlay (z-index 9999) until the page-builder iframe holds its
+// document. Both stack above the quick-find modal overlay (z-index 8000), so a modal opened
+// before jContent settles fails `be.visible` with "being covered by another element".
+const JCONTENT_LOADER_OVERLAY_SELECTOR = '.flexCol_center.alignCenter:has(> .moonstone-loader)';
+const PAGE_BUILDER_FRAME_SELECTOR = 'iframe[data-sel-role="page-builder-frame-active"]';
+const JCONTENT_PAGES_ROUTE = /\/jcontent\/[^/]+\/[^/]+\/pages(\/|$)/;
+
+const waitForJContentIdle = () => {
+    cy.location('pathname').then(pathname => {
+        if (!JCONTENT_PAGES_ROUTE.test(pathname)) {
+            return;
+        }
+
+        // EditFrame portals #jahia-portal-root into the frame once it holds the frame's
+        // document, the same state that lifts its overlay. The pathname may still be /pages
+        // here: the wait also spans the redirect to /pages/home.
+        cy.get(PAGE_BUILDER_FRAME_SELECTOR, {timeout: 30000}).should($frame => {
+            const portalRoot = $frame.contents().find('#jahia-portal-root');
+            expect(portalRoot, 'page builder frame loaded the page').to.have.length(1);
+        });
+    });
+
+    cy.get(JCONTENT_LOADER_OVERLAY_SELECTOR, {timeout: 30000}).should('not.exist');
+};
+
 export const openSearchModal = () => {
     const panelSelector = '[data-quick-find-panel="true"]';
     const modalSelector = '[data-quick-find-modal="true"]';
+
+    waitForJContentIdle();
 
     // Coarse gate only: routes.tsx appends the container before createRoot() and render(),
     // so its presence proves mountModal() started, not that QuickFindModal's effect has
