@@ -20,6 +20,17 @@ export const RESULT_ROW_SELECTOR = '[data-quick-find-result-row="true"][tabindex
 export const SHOW_MORE_SELECTOR = '[data-quick-find-show-more="true"]';
 export const SEARCH_INPUT_SELECTOR = '[data-quick-find-search-input-wrapper="true"] input[type="search"]';
 
+export type GraphqlOperation = {operationName?: string; variables?: Record<string, unknown>};
+
+// The operations carried by an intercepted POST to /modules/graphql. The modal queries
+// through jContent's Apollo client, which batches: one search sends a single request whose
+// body is an array such as [getCurrentUser, JCRMediaByCriteria, JCRNodesByCriteria,
+// JCRMainResourcesByCriteria], so `req.body.operationName` is undefined there.
+export const graphqlOperations = (body: unknown): GraphqlOperation[] =>
+    (Array.isArray(body) ? body : [body]).filter(
+        (operation): operation is GraphqlOperation => typeof operation === 'object' && operation !== null
+    );
+
 const gqlAuth = () => ({user: 'root', pass: Cypress.env('SUPER_USER_PASSWORD')});
 
 const ADD_NODE_MUTATION = `
@@ -183,11 +194,24 @@ const gqlRequest = (body: Record<string, unknown>): Cypress.Chainable<GraphQLRes
             (response: Cypress.Response<unknown>) => response.body as GraphQLResult
         ) as unknown as Cypress.Chainable<GraphQLResult>;
 
+// Mirrors InputJCRProperty: `value` for a single value, `values` for a multiple
+// property (j:tagList), `language` for an i18n one, and `type` for the JCR property
+// type. All four are optional, `type` included: it is a nullable enum with no
+// default, and jcr:title and j:templateName below are created without it. A fixture
+// passes it only where it wants the stored type spelled out.
+export type NodeProperty = {
+    name: string;
+    language?: string;
+    value?: string;
+    values?: string[];
+    type?: string;
+};
+
 const addNode = (variables: {
     parentPathOrId: string;
     name: string;
     primaryNodeType: string;
-    properties?: Array<{name: string; language?: string; value: string}>;
+    properties?: NodeProperty[];
     mixins?: string[];
 }) => gqlRequest({query: ADD_NODE_MUTATION, variables});
 
@@ -394,7 +418,15 @@ export const searchInModal = (query: string) => {
 
 // jnt:page requires j:templateName (mandatory constraint). The ensureHomePage
 // guard creates /home if createSite's template import hasn't done it yet.
-export const createPageViaGraphql = (siteKey: string, pageName: string, pageTitle: string) => {
+//
+// `options` carries what a search fixture needs beyond a title: mixins (e.g.
+// jmix:tagged) and the properties they bring (e.g. j:tagList).
+export const createPageViaGraphql = (
+    siteKey: string,
+    pageName: string,
+    pageTitle: string,
+    options: {mixins?: string[]; properties?: NodeProperty[]} = {}
+) => {
     const ensureHomePage = () =>
         getNodeByPath(`/sites/${siteKey}/home`).then((result: GraphQLResult) => {
             if (result?.data?.jcr?.nodeByPath?.uuid) {
@@ -425,6 +457,7 @@ export const createPageViaGraphql = (siteKey: string, pageName: string, pageTitl
                     parentPathOrId: `/sites/${siteKey}/home`,
                     name: pageName,
                     primaryNodeType: 'jnt:page',
+                    mixins: options.mixins,
                     properties: [
                         {
                             name: 'jcr:title',
@@ -434,7 +467,8 @@ export const createPageViaGraphql = (siteKey: string, pageName: string, pageTitl
                         {
                             name: 'j:templateName',
                             value: 'base'
-                        }
+                        },
+                        ...(options.properties ?? [])
                     ]
                 }).then((result: GraphQLResult) => {
                     assertNoGraphQLErrors(result, 'GraphQL errors while creating page');
