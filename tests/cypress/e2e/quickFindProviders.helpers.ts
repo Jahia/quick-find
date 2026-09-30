@@ -398,19 +398,24 @@ const modalRenders = (win: Cypress.AUTWindow, withinMs: number) =>
 // The button dispatches quick-find:open-search, which maps to setIsOpen(true), so clicking
 // it again while the modal is closed is safe. A click that lands before QuickFindModal's
 // effect has attached the listener is lost, hence the repeat until the modal renders. The
-// modal is checked before each click because, once open, its overlay covers the navigation.
+// modal is checked before each click, the first one included (searchInModal also runs on an
+// already open modal): once open, its overlay covers the navigation.
 const clickSearchInPrimaryNav = (clicksLeft: number) => {
-    cy.get(SEARCH_NAV_ITEM_SELECTOR, {timeout: LONG_TIMEOUT}).click();
-    cy.window()
-        .then({timeout: 3000}, win => modalRenders(win, 1000))
-        .then(rendered => {
-            if (rendered) {
-                return;
-            }
+    cy.document().then(doc => {
+        if (doc.querySelector(MODAL_SELECTOR)) {
+            return;
+        }
 
-            expect(clicksLeft - 1, 'Search clicks left before the modal opens').to.be.greaterThan(0);
-            clickSearchInPrimaryNav(clicksLeft - 1);
-        });
+        expect(clicksLeft, 'Search clicks left before the modal opens').to.be.greaterThan(0);
+        cy.get(SEARCH_NAV_ITEM_SELECTOR, {timeout: LONG_TIMEOUT}).click();
+        cy.window()
+            .then({timeout: 3000}, win => modalRenders(win, 1000))
+            .then(rendered => {
+                if (!rendered) {
+                    clickSearchInPrimaryNav(clicksLeft - 1);
+                }
+            });
+    });
 };
 
 export const openSearchModal = () => {
