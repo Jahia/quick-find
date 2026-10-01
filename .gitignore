@@ -19,3 +19,5 @@ src/main/resources/javascript/apps
 
 # Credentials — never commit
 .env
+# Maven versions:set backups
+*.versionsBackup
