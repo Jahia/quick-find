@@ -11,7 +11,7 @@
     <groupId>org.jahia.test</groupId>
     <artifactId>quick-find-test-module</artifactId>
     <name>Test module for QuickFind</name>
-    <version>0.9.1-SNAPSHOT</version>
+    <version>0.9.1</version>
     <packaging>bundle</packaging>
     <description>A test module for QuickFind (search dialog for Jahia)</description>
 
