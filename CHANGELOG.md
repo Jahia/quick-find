@@ -1,5 +1,9 @@
 # quick-find Changelog
 
+## 0.9.2
+
+* The search icon in the primary navigation now shows the `CTRL+K` keyboard shortcut below the magnifying glass.
+
 ## 0.9.1
 
 ### New Features
