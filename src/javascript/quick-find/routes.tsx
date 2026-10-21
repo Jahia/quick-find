@@ -1,4 +1,4 @@
-import { PrimaryNavItem, Search } from "@jahia/moonstone";
+import { PrimaryNavItem } from "@jahia/moonstone";
 import { registry } from "@jahia/ui-extender";
 import i18nModule from "i18next";
 import { I18nextProvider } from "react-i18next";
@@ -18,6 +18,7 @@ const i18n =
 import { createRoot } from "react-dom/client";
 import type { Root } from "react-dom/client";
 import { QuickFindModal } from "./QuickFindModal/QuickFindModal.tsx";
+import { SearchShortcutIcon } from "./SearchShortcutIcon/SearchShortcutIcon.tsx";
 
 const MODAL_CONTAINER_ID = "quick-find-search-modal";
 
@@ -25,7 +26,7 @@ let modalRoot: Root | undefined;
 
 const NavSearchButton: React.FC = () => (
     <PrimaryNavItem
-    icon={<Search/>}
+    icon={<SearchShortcutIcon/>}
     label="Search"
     onClick={() => window.dispatchEvent(new CustomEvent("quick-find:open-search"))}
   />
