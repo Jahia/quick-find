@@ -2,6 +2,8 @@
 
 declare interface Window {
   contextJsParameters: {
+    /** `""` when Jahia runs at the web root, never a trailing slash. */
+    contextPath?: string;
     currentUser: string;
     uilang?: string;
     lang?: string;

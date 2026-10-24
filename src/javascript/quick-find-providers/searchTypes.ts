@@ -25,7 +25,7 @@ export type GqlJcrNodeType = {
  *
  * `displayName` is nullable in the schema (String with a `language` arg);
  * callers fall back to `name` when it is absent.
- * `thumbnailUrl` is optional because it is only selected by the media query.
+ * `thumbnailUrl` and `content` are optional because only the media query selects them.
  */
 export type GqlJcrNode = {
   displayName: string | null;
@@ -35,6 +35,7 @@ export type GqlJcrNode = {
   workspace: Workspace;
   primaryNodeType: GqlJcrNodeType;
   thumbnailUrl?: string | null;
+  content?: { mimeType: { value: string } | null } | null;
 };
 
 /**

@@ -48,6 +48,11 @@ export const JCR_MEDIA_BY_CRITERIA_QUERY = gql`
             name
           }
           thumbnailUrl(name: "thumbnail", checkIfExists: true)
+          content: descendant(relPath: "jcr:content") {
+            mimeType: property(name: "jcr:mimeType") {
+              value
+            }
+          }
         }
       }
     }
