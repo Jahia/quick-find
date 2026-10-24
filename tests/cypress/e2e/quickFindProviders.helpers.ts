@@ -58,6 +58,13 @@ mutation upload($file: String!, $parentPathOrId: String!, $name: String!, $mimeT
     }
 }`;
 
+const DELETE_NODE_MUTATION = `
+mutation deleteNode($pathOrId: String!) {
+    jcr {
+        deleteNode(pathOrId: $pathOrId)
+    }
+}`;
+
 const GET_NODE_BY_PATH_QUERY = `
 query getNodeByPath($path: String!) {
     jcr(workspace: EDIT) {
@@ -590,6 +597,24 @@ const uploadFile = (parentPathOrId: string, name: string, mimeType: string): Cyp
         .then(
             (response: Cypress.Response<unknown>) => response.body as GraphQLResult
         ) as unknown as Cypress.Chainable<GraphQLResult>;
+};
+
+// A Jahia image can render a thumbnail even from bytes that are no image, so a test
+// that needs an image without a thumbnail removes it. The rules that create it run
+// synchronously on save, so it already exists when the upload returns.
+export const removeThumbnailViaGraphql = (siteKey: string, fileName: string) => {
+    const thumbnailPath = `/sites/${siteKey}/files/${fileName}/thumbnail`;
+
+    return getNodeByPath(thumbnailPath).then((result: GraphQLResult) => {
+        if (!result?.data?.jcr?.nodeByPath?.uuid) {
+            return;
+        }
+
+        gqlRequest({query: DELETE_NODE_MUTATION, variables: {pathOrId: thumbnailPath}}).then(
+            (deleteResult: GraphQLResult) =>
+                assertNoGraphQLErrors(deleteResult, 'GraphQL errors while removing a thumbnail')
+        );
+    });
 };
 
 export const createMediaViaGraphql = (siteKey: string, fileName: string, mimeType = 'text/plain') =>

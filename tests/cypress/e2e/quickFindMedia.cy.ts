@@ -2,6 +2,7 @@ import {
     createMediaViaGraphql,
     createTestToken,
     MEDIUM_TIMEOUT,
+    removeThumbnailViaGraphql,
     RESULT_ROW_SELECTOR,
     searchInModal,
     SITE_KEY,
@@ -18,9 +19,9 @@ describe('QuickFind media provider', () => {
         cy.login();
         createMediaViaGraphql(SITE_KEY, exactFile);
         createMediaViaGraphql(SITE_KEY, broaderFile);
-        // Text bytes under an image MIME type: the image service makes no thumbnail for
-        // it, as for a real webp file.
+        // An image file without a thumbnail, as Jahia 8.2.3.2 leaves a real webp file.
         createMediaViaGraphql(SITE_KEY, webpFile, 'image/webp');
+        removeThumbnailViaGraphql(SITE_KEY, webpFile);
     });
 
     beforeEach(() => {
