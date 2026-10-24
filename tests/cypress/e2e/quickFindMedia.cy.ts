@@ -57,8 +57,6 @@ describe('QuickFind media provider', () => {
     it('shows no thumbnail for a file that is not an image', () => {
         searchInModal(exactFile);
 
-        cy.contains(RESULT_ROW_SELECTOR, exactFile, {timeout: MEDIUM_TIMEOUT})
-            .find('img')
-            .should('not.exist');
+        cy.contains(RESULT_ROW_SELECTOR, exactFile, {timeout: MEDIUM_TIMEOUT}).find('img').should('not.exist');
     });
 });
