@@ -46,12 +46,12 @@ mutation addNode($parentPathOrId: String!, $name: String!, $primaryNodeType: Str
 // jcr:mimeType and jcr:data. The $file variable is the form-field key name;
 // Jahia resolves the binary from that field in the multipart body.
 const UPLOAD_FILE_MUTATION = `
-mutation upload($file: String!, $parentPathOrId: String!, $name: String!) {
+mutation upload($file: String!, $parentPathOrId: String!, $name: String!, $mimeType: String!) {
     jcr {
         addNode(parentPathOrId: $parentPathOrId, name: $name, primaryNodeType: "jnt:file") {
             addChild(name: "jcr:content", primaryNodeType: "jnt:resource") {
                 c: mutateProperty(name: "jcr:data") { setValue(type: BINARY, value: $file) }
-                m: mutateProperty(name: "jcr:mimeType") { setValue(value: "text/plain") }
+                m: mutateProperty(name: "jcr:mimeType") { setValue(value: $mimeType) }
             }
             uuid
         }
@@ -554,7 +554,7 @@ const ensureMediaRoot = (siteKey: string) => {
 // so that full-text search can find the file by keyword phrases. Lucene treats
 // hyphens as NOT operators, so search terms with hyphens won't match hyphenated
 // filenames — content with spaces is more reliably indexed.
-const uploadFile = (parentPathOrId: string, name: string): Cypress.Chainable<GraphQLResult> => {
+const uploadFile = (parentPathOrId: string, name: string, mimeType: string): Cypress.Chainable<GraphQLResult> => {
     const boundary = `CypressBoundary${Date.now()}`;
     const fileKey = 'filedata';
     const fileContent = name.replace(/-/g, ' ').replace(/\.\w+$/, '');
@@ -567,7 +567,7 @@ const uploadFile = (parentPathOrId: string, name: string): Cypress.Chainable<Gra
         `--${boundary}`,
         `Content-Disposition: form-data; name="variables"`,
         '',
-        JSON.stringify({file: fileKey, parentPathOrId, name}),
+        JSON.stringify({file: fileKey, parentPathOrId, name, mimeType}),
         `--${boundary}`,
         `Content-Disposition: form-data; name="${fileKey}"; filename="${name}"`,
         'Content-Type: text/plain',
@@ -592,10 +592,10 @@ const uploadFile = (parentPathOrId: string, name: string): Cypress.Chainable<Gra
         ) as unknown as Cypress.Chainable<GraphQLResult>;
 };
 
-export const createMediaViaGraphql = (siteKey: string, fileName: string) =>
+export const createMediaViaGraphql = (siteKey: string, fileName: string, mimeType = 'text/plain') =>
     ensureSiteExists(siteKey).then(() =>
         ensureMediaRoot(siteKey).then(() =>
-            uploadFile(`/sites/${siteKey}/files`, fileName).then((result: GraphQLResult) => {
+            uploadFile(`/sites/${siteKey}/files`, fileName, mimeType).then((result: GraphQLResult) => {
                 assertNoGraphQLErrors(result, 'GraphQL errors while creating media');
                 expect(result?.data?.jcr?.addNode?.uuid, 'created media uuid').to.be.a('string');
                 return result;

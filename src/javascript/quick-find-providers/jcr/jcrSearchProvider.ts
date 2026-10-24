@@ -32,6 +32,20 @@ const MIN_WILDCARD_TOKEN_LENGTH = 3;
 const escapeLike = (value: string): string =>
   value.replace(/[\\%_]/g, (match) => `\\${match}`);
 
+/**
+ * The image service generates no thumbnail for some formats, such as webp, so such an
+ * image shows the file itself, as jContent does.
+ */
+function imageFileUrl(node: GqlJcrNode): string | null {
+  if (!node.content?.mimeType?.value.startsWith("image/")) {
+    return null;
+  }
+
+  const contextPath = window.contextJsParameters?.contextPath || "";
+  const encodedPath = node.path.replace(/[^/]/g, encodeURIComponent);
+  return `${contextPath}/files/default${encodedPath}`;
+}
+
 /** Maps a raw GraphQL JCR node to the provider-agnostic `SearchHit` shape. */
 export function jcrNodeToSearchHit(node: GqlJcrNode): SearchHit {
   return {
@@ -40,7 +54,7 @@ export function jcrNodeToSearchHit(node: GqlJcrNode): SearchHit {
     displayableName: node.displayName || node.name,
     excerpt: null,
     nodeType: node.primaryNodeType.name,
-    thumbnailUrl: node.thumbnailUrl ?? null,
+    thumbnailUrl: node.thumbnailUrl ?? imageFileUrl(node),
   };
 }
 
