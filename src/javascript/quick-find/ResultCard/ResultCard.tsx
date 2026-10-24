@@ -3,7 +3,7 @@
  *
  * Renders two or three lines depending on whether an excerpt is provided:
  * - Line 1: title (truncated at 80 chars)
- * - Line 2: type badge (Chip) + path
+ * - Line 2: type badge (Chip) + path, on one line and cut at its start
  * - Line 3 (optional): HTML excerpt with highlighted terms
  *
  * When no excerpt is present the item uses a compact height (56px vs 96px).
@@ -89,10 +89,12 @@ export const ResultCard = ({
           />
         )}
               <div className={s.resultRowInfo}>
-                  <Typography variant="subHeading">{displayTitle}</Typography>
+                  <Typography isNowrap variant="body">{displayTitle}</Typography>
                   <div className={s.resultRowMeta}>
-                      <Chip color="accent" label={type}/>
-                      <Typography variant="caption">{path}</Typography>
+                      <Chip className={s.resultRowChip} color="accent" label={type}/>
+                      <Typography isNowrap variant="caption" className={s.resultRowPath} title={path}>
+                          <span dir="ltr">{path}</span>
+                      </Typography>
                   </div>
                   {excerpt && (
                   <Typography variant="caption" className={s.resultRowExcerpt}>

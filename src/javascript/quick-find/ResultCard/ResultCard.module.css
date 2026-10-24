@@ -51,6 +51,18 @@
   gap: var(--spacing-small);
 }
 
+.resultRowChip {
+  flex-shrink: 0;
+}
+
+/* direction: rtl moves the cut and its ellipsis to the start of the path, so the
+   tail stays visible. The dir="ltr" span keeps the slashes in reading order. */
+.resultRowPath {
+  min-width: 0;
+  direction: rtl;
+  text-align: left;
+}
+
 .resultRowExcerpt {
   display: -webkit-box;
   -webkit-line-clamp: 2;
