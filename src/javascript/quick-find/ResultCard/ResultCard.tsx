@@ -12,7 +12,7 @@
  * - Enter / click → onAction (navigate to the node)
  * - E → onSecondaryAction (open content editor, if available)
  */
-import type { KeyboardEvent as ReactKeyboardEvent } from "react";
+import type { KeyboardEvent as ReactKeyboardEvent, ReactNode } from "react";
 import {
   Button,
   Chip,
@@ -38,6 +38,22 @@ type ResultCardProps = {
   /** Optional secondary action button (e.g. edit). Hidden by default, shown on hover. */
   readonly onSecondaryAction?: () => void;
 };
+
+/**
+ * Turns the HTML excerpt into React nodes. Only the `<em>` that marks a matched term stays an
+ * element, and any other markup in the excerpt is shown as text. DOMParser builds an inert
+ * document, so it runs no script and loads no image.
+ */
+const renderExcerpt = (excerpt: string): ReactNode[] =>
+  Array.from(
+    new DOMParser().parseFromString(excerpt, "text/html").body.childNodes,
+    (node, index) =>
+      node.nodeName === "EM" ? (
+          <em key={index}>{node.textContent}</em>
+      ) : (
+        node.textContent
+      ),
+  );
 
 export const ResultCard = ({
   title,
@@ -96,9 +112,7 @@ export const ResultCard = ({
                   </div>
                   {excerpt && (
                   <Typography variant="caption" className={s.resultRowExcerpt}>
-                      {/* Excerpt is sanitized upstream before rendering. */}
-                      {/* eslint-disable-next-line react/no-danger */}
-                      <span dangerouslySetInnerHTML={{ __html: excerpt }}/>
+                      <span>{renderExcerpt(excerpt)}</span>
                   </Typography>
           )}
               </div>
