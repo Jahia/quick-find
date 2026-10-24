@@ -103,7 +103,10 @@ export const QuickFindPanel = ({ focusOnField, onNavigate }: QuickFindPanelProps
               registration.locate(hit);
               onNavigate?.();
             }}
-            onSecondaryAction={registration.edit ? (hit) => registration.edit!(hit) : undefined}
+            onSecondaryAction={registration.edit ? (hit) => {
+              registration.edit!(hit);
+              onNavigate?.();
+            } : undefined}
             onLoadMore={loadNextPage}
           />
         ))}
