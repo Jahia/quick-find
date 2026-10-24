@@ -3,6 +3,7 @@ import {
     createTestToken,
     MEDIUM_TIMEOUT,
     openSearchModal,
+    RESULT_ROW_SELECTOR,
     searchInModal,
     SITE_KEY,
     updateQuickFindConfigurationViaGraphql,
@@ -12,10 +13,13 @@ import {
 describe('QuickFind edge cases', () => {
     const token = createTestToken();
     const pageTitle = `quick-find edge title ${token}`;
+    const longPathName = `quick-find-edge-long-path-${'segment-'.repeat(12)}${token}`;
+    const longPathTitle = `quick-find long path ${token}`;
 
     before('Seed content', () => {
         cy.login();
         createPageViaGraphql(SITE_KEY, `quick-find-edge-page-${token}`, pageTitle);
+        createPageViaGraphql(SITE_KEY, longPathName, longPathTitle);
     });
 
     beforeEach(function () {
@@ -51,6 +55,19 @@ describe('QuickFind edge cases', () => {
 
         cy.get('[data-quick-find-panel="true"]').contains('Pages', {timeout: MEDIUM_TIMEOUT});
         cy.get('[data-quick-find-panel="true"]').contains(pageTitle, {timeout: MEDIUM_TIMEOUT});
+    });
+
+    it('keeps a long path on one line inside its result row', () => {
+        searchInModal(longPathTitle);
+
+        cy.contains(RESULT_ROW_SELECTOR, longPathTitle, {timeout: MEDIUM_TIMEOUT}).then($row => {
+            const path = $row.find(`[title="/sites/${SITE_KEY}/home/${longPathName}"]`);
+            expect(path, 'path that shows the full path on hover').to.have.length(1);
+
+            const pathBox = path[0].getBoundingClientRect();
+            expect(pathBox.height, 'path height').to.be.lessThan(20);
+            expect(pathBox.bottom, 'path bottom').to.be.at.most($row[0].getBoundingClientRect().bottom);
+        });
     });
 
     it('closes the modal when pressing Escape', () => {
