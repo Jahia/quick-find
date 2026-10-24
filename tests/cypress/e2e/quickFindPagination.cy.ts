@@ -86,7 +86,7 @@ describe('QuickFind pagination behavior', () => {
             });
     });
 
-    it('supports Tab then e to trigger edit action on a focused result row', () => {
+    it('supports Tab then e to trigger edit action on a focused result row and closes the modal', () => {
         searchInModal(`quick-find pagination ${token}`);
 
         cy.window().then(win => {
@@ -112,6 +112,7 @@ describe('QuickFind pagination behavior', () => {
         cy.focused().type('e');
 
         cy.get('@editSpy').should('have.been.calledOnce');
+        cy.get('[data-quick-find-modal="true"]').should('not.be.visible');
     });
 
     it('supports Enter to navigate from a focused result row and closes the modal', () => {
