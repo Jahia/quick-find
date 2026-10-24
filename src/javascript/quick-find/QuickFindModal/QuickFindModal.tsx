@@ -70,6 +70,17 @@ export const QuickFindModal = () => {
     };
   }, []);
 
+  const keyHints = [
+    {
+      key: navigator.userAgent.includes("Mac") ? "⌘K" : "Ctrl+K",
+      label: t("search.modal.keys.open", "Open"),
+    },
+    { key: "Esc", label: t("search.modal.keys.close", "Close") },
+    { key: "Tab", label: t("search.modal.keys.navigate", "Navigate") },
+    { key: "↵", label: t("search.modal.keys.go", "Go") },
+    { key: "E", label: t("search.modal.keys.edit", "Edit") },
+  ];
+
   if (!apolloClient) {
     console.error(
       "[quick-find] Apollo client is not available — modal cannot render.",
@@ -93,28 +104,28 @@ export const QuickFindModal = () => {
               </div>
               <ModalFooter>
                   <div className={s.footerLayout}>
-                      <div className={s.footerHints}>
-                          <Typography variant="caption">
-                              {t(
-                  "search.modal.hint",
-                  "Press Ctrl+K or ⌘K to open · Esc to close · Tab to navigate · Enter to go · E to edit",
-                )}
-                          </Typography>
-                          <Typography variant="caption">
-                              {t(
-                  "search.modal.reportIssuePrefix",
-                  "Report bugs and improvements at",
-                )}{" "}
-                              <a
-                  className={s.issueLink}
-                  href="https://github.com/Jahia/quick-find/issues"
-                  target="_blank"
-                  rel="noreferrer"
-                              >
-                                  https://github.com/Jahia/quick-find/issues
-                              </a>
-                          </Typography>
+                      <div className={s.keyHints}>
+                          {keyHints.map(({ key, label }) => (
+                              <Typography key={key} variant="caption">
+                                  <kbd className={s.kbd}>{key}</kbd>
+                                  {label}
+                              </Typography>
+              ))}
                       </div>
+                      <Typography variant="caption">
+                          {t(
+                "search.modal.reportIssuePrefix",
+                "Report bugs and improvements at",
+              )}{" "}
+                          <a
+                className={s.issueLink}
+                href="https://github.com/Jahia/quick-find/issues"
+                target="_blank"
+                rel="noreferrer"
+                          >
+                              https://github.com/Jahia/quick-find/issues
+                          </a>
+                      </Typography>
                       {/* Build time shown only in dev builds */}
                       {import.meta.env.DEV && (
                       <Typography variant="caption" style={{ opacity: 0.4 }}>

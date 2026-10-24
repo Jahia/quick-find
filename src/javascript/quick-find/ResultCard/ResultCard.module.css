@@ -1,25 +1,39 @@
-.resultRow {
-  height: 96px;
+.resultRow,
+.resultRowCompact {
   padding: var(--spacing-small);
+  border-radius: 6px;
   cursor: pointer;
 }
 
+.resultRow {
+  height: 96px;
+}
+
 .resultRowCompact {
-  height: 56px;
-  padding: var(--spacing-small);
-  cursor: pointer;
+  height: 64px;
 }
 
 .resultRow:hover,
 .resultRowCompact:hover {
-  background-color: rgba(0, 0, 0, 0.04);
+  background-color: var(--color-gray_light_plain40);
 }
 
+/* The focused row reads as a menu selection: white text on dark blue. */
 .resultRow:focus-visible,
 .resultRowCompact:focus-visible {
-  outline: 2px solid var(--color-accent_light) !important;
-  outline-offset: -2px;
-  border-radius: 2px;
+  outline: none !important;
+  color: var(--color-white);
+  background-color: var(--color-accent_dark_contrast);
+}
+
+.resultRow:focus-visible :is(.resultRowType, .resultRowPath, .resultRowExcerpt),
+.resultRowCompact:focus-visible :is(.resultRowType, .resultRowPath) {
+  color: inherit;
+}
+
+.resultRow:focus-visible :global(.moonstone-button),
+.resultRowCompact:focus-visible :global(.moonstone-button) {
+  color: var(--color-white);
 }
 
 .resultRowContent {
@@ -28,13 +42,48 @@
   width: 100%;
 }
 
-.thumbnail {
+.thumbnail,
+.typeTile {
   flex-shrink: 0;
-  width: 40px;
-  height: 40px;
-  margin-right: var(--spacing-small);
-  border-radius: var(--spacing-nano);
+  width: 48px;
+  height: 48px;
+  margin-right: 12px;
+  border-radius: 6px;
+}
+
+.resultRow .thumbnail,
+.resultRow .typeTile {
+  align-self: flex-start;
+}
+
+.thumbnail {
   object-fit: cover;
+}
+
+.typeTile {
+  display: grid;
+  place-items: center;
+}
+
+.page {
+  color: var(--color-accent_dark);
+  background-color: var(--color-accent_light_plain20);
+}
+
+.content {
+  color: var(--color-purple);
+  background-color: var(--color-purple_plain20);
+}
+
+.file {
+  color: var(--color-gray_dark);
+  background-color: var(--color-gray_light_plain40);
+}
+
+/* Moonstone has no light warning tint, so the feature tile uses literal amber values. */
+.feature {
+  color: #8a6500;
+  background-color: #fff1c2;
 }
 
 .resultRowInfo {
@@ -51,8 +100,14 @@
   gap: var(--spacing-small);
 }
 
-.resultRowChip {
+.resultRowType {
   flex-shrink: 0;
+  color: var(--color-gray);
+}
+
+.resultRowType::after {
+  content: "·";
+  margin-left: var(--spacing-small);
 }
 
 /* direction: rtl moves the cut and its ellipsis to the start of the path, so the
@@ -61,6 +116,7 @@
   min-width: 0;
   direction: rtl;
   text-align: left;
+  color: var(--color-gray);
 }
 
 .resultRowExcerpt {
@@ -68,6 +124,22 @@
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  color: var(--color-gray_dark);
+}
+
+/* Augmented Search marks each matched term with <em>. */
+.resultRowExcerpt em {
+  padding: 0 var(--spacing-pico);
+  border-radius: 2px;
+  font-style: normal;
+  font-weight: 700;
+  color: var(--color-accent_dark_contrast);
+  background-color: var(--color-accent_light_plain40);
+}
+
+.resultRow:focus-visible .resultRowExcerpt em {
+  color: inherit;
+  background-color: var(--color-light20);
 }
 
 .resultRowActions {

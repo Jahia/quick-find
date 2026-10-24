@@ -12,8 +12,14 @@
       "label": "Search",
       "title": "Welcome to QuickFind",
       "siteInfo": "Searching in {{site}}, {{language}}",
-      "hint": "Press Ctrl+K or ⌘K to open me. Esc to close. Navigate with Tab. Enter to go to. e for edit.",
-      "reportIssue": "Report bugs and improvements at https://github.com/Jahia/quick-find/issues"
+      "reportIssue": "Report bugs and improvements at https://github.com/Jahia/quick-find/issues",
+      "keys": {
+        "open": "Open",
+        "close": "Close",
+        "navigate": "Navigate",
+        "go": "Go",
+        "edit": "Edit"
+      }
     },
     "empty": {
       "title": "Find anything.",

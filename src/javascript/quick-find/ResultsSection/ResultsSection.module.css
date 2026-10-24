@@ -1,15 +1,32 @@
 .section {
-  margin-bottom: var(--spacing-medium);
-  margin-top: var(--spacing-small);
-  padding-left: 6px;
+  margin: var(--spacing-small) 0;
+}
+
+/* The title stays visible while its rows scroll under it. */
+.sectionTitle {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  align-items: baseline;
+  gap: var(--spacing-small);
+  padding: var(--spacing-small) var(--spacing-small) 6px;
+  color: var(--color-gray);
+  background-color: var(--color-light);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
 }
 
 .resultsList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-pico);
   list-style: none;
   margin: 0;
   padding: 0;
 }
 
 .showMoreButton {
-  width: 100%;
+  margin-left: 60px;
+  color: var(--color-accent_dark);
 }
