@@ -1,5 +1,13 @@
 # quick-find Changelog
 
+## 0.9.3
+
+* A long path now stays on one line in a result row and shows its end, and the full path appears on hover. The row title uses a smaller font.
+
+* The edit action now closes the quick find modal when it opens the content editor.
+
+* A media result for an image without a generated thumbnail, such as a webp file, now shows the image itself as its thumbnail.
+
 ## 0.9.2
 
 * The search icon in the primary navigation now shows the `CTRL+K` keyboard shortcut below the magnifying glass.
