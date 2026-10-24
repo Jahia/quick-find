@@ -112,7 +112,7 @@ describe('QuickFind pagination behavior', () => {
         cy.focused().type('e');
 
         cy.get('@editSpy').should('have.been.calledOnce');
-        cy.get('[data-quick-find-modal="true"]').should('not.be.visible');
+        cy.get('[data-quick-find-panel="true"]').should('not.exist');
     });
 
     it('supports Enter to navigate from a focused result row and closes the modal', () => {
@@ -122,7 +122,7 @@ describe('QuickFind pagination behavior', () => {
         cy.focused().should('match', RESULT_ROW_SELECTOR);
         cy.realPress('Enter');
 
-        cy.get('[data-quick-find-modal="true"]').should('not.be.visible');
+        cy.get('[data-quick-find-panel="true"]').should('not.exist');
     });
 
     it('keeps only the latest query results when a previous request resolves late', () => {
