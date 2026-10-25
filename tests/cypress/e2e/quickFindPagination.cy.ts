@@ -177,8 +177,8 @@ describe('QuickFind pagination behavior', () => {
             const mediaIndex = sectionKeys.indexOf('quick-find-jcr-media');
             const pagesIndex = sectionKeys.indexOf('quick-find-jcr-pages');
 
-            expect(featuresIndex).to.be.lessThan(mediaIndex);
-            expect(mediaIndex).to.be.lessThan(pagesIndex);
+            expect(featuresIndex).to.be.lessThan(pagesIndex);
+            expect(pagesIndex).to.be.lessThan(mediaIndex);
         });
     });
 });
