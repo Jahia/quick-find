@@ -59,9 +59,8 @@ describe('QuickFind sites provider', () => {
             'not.have.attr',
             'aria-disabled'
         );
-        cy.contains(SITES_ROW_SELECTOR, BILINGUAL_SITE_KEY)
-            .should('not.have.attr', 'aria-disabled')
-            .and('have.attr', 'data-quick-find-result-kind', 'site');
+        cy.contains(SITES_ROW_SELECTOR, BILINGUAL_SITE_KEY).should('not.have.attr', 'aria-disabled');
+        cy.contains(SITES_ROW_SELECTOR, BILINGUAL_SITE_KEY).should('have.attr', 'data-quick-find-result-kind', 'site');
         cy.contains(SITES_ROW_SELECTOR, SITE_KEY)
             .should('have.attr', 'aria-disabled', 'true')
             .and('contain', 'Current site');
