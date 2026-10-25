@@ -44,6 +44,8 @@ export type SearchHit = {
   nodeType: string;
   /** URL to a thumbnail image, if available (e.g. for media nodes). */
   thumbnailUrl?: string | null;
+  /** Shown but takes no action (e.g. the site jContent already shows). */
+  isDisabled?: boolean;
 };
 
 export type ApolloClientInstance = ApolloClient<NormalizedCacheObject>;

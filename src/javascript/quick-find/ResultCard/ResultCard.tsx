@@ -12,8 +12,10 @@
  * Keyboard:
  * - Enter / click → onAction (navigate to the node)
  * - E → onSecondaryAction (open content editor, if available)
+ *
+ * A disabled row is greyed out and ignores the click and Enter.
  */
-import type { KeyboardEvent as ReactKeyboardEvent } from "react";
+import type { KeyboardEvent as ReactKeyboardEvent, ReactNode } from "react";
 import {
   Button,
   Edit,
@@ -55,6 +57,7 @@ type ResultCardProps = {
   readonly path: string;
   readonly excerpt?: string | null;
   readonly thumbnailUrl?: string | null;
+  readonly isDisabled?: boolean;
   readonly rowIndex?: number;
   readonly tabIndex?: number;
   /** Called when the row is clicked or Enter is pressed. */
@@ -63,12 +66,29 @@ type ResultCardProps = {
   readonly onSecondaryAction?: () => void;
 };
 
+/**
+ * Turns the HTML excerpt into React nodes. Only the `<em>` that marks a matched term stays an
+ * element, and any other markup in the excerpt is shown as text. DOMParser builds an inert
+ * document, so it runs no script and loads no image.
+ */
+const renderExcerpt = (excerpt: string): ReactNode[] =>
+  Array.from(
+    new DOMParser().parseFromString(excerpt, "text/html").body.childNodes,
+    (node, index) =>
+      node.nodeName === "EM" ? (
+          <em key={index}>{node.textContent}</em>
+      ) : (
+        node.textContent
+      ),
+  );
+
 export const ResultCard = ({
   title,
   type,
   path,
   excerpt,
   thumbnailUrl,
+  isDisabled = false,
   rowIndex,
   tabIndex = -1,
   onAction,
@@ -82,7 +102,10 @@ export const ResultCard = ({
   const handleRowKeyDown = (event: ReactKeyboardEvent<HTMLLIElement>) => {
     if (event.key === "Enter") {
       event.preventDefault();
-      onAction();
+      if (!isDisabled) {
+        onAction();
+      }
+
       return;
     }
 
@@ -100,9 +123,10 @@ export const ResultCard = ({
       data-quick-find-result
       data-quick-find-result-row="true"
       data-quick-find-result-index={rowIndex}
-      className={excerpt ? s.resultRow : s.resultRowCompact}
+      className={`${excerpt ? s.resultRow : s.resultRowCompact}${isDisabled ? ` ${s.resultRowDisabled}` : ""}`}
       tabIndex={tabIndex}
-      onClick={onAction}
+      aria-disabled={isDisabled || undefined}
+      onClick={isDisabled ? undefined : onAction}
       onKeyDown={handleRowKeyDown}
       >
           <div className={s.resultRowContent}>
@@ -130,14 +154,13 @@ export const ResultCard = ({
                   </div>
                   {excerpt && (
                   <Typography variant="caption" className={s.resultRowExcerpt}>
-                      {/* Excerpt is sanitized upstream before rendering. */}
-                      {/* eslint-disable-next-line react/no-danger */}
-                      <span dangerouslySetInnerHTML={{ __html: excerpt }}/>
+                      <span>{renderExcerpt(excerpt)}</span>
                   </Typography>
           )}
               </div>
 
               <div className={s.resultRowActions}>
+                  {!isDisabled && (
                   <Tooltip label="Enter">
                       <Button
               variant="ghost"
@@ -149,6 +172,7 @@ export const ResultCard = ({
               }}
             />
                   </Tooltip>
+                  )}
                   {onSecondaryAction && (
                   <Tooltip label={t("search.action.edit", "Edit")}>
                       <Button

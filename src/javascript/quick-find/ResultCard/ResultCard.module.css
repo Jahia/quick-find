@@ -18,6 +18,15 @@
   background-color: var(--color-gray_light_plain40);
 }
 
+.resultRowDisabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+.resultRowDisabled:hover {
+  background-color: transparent;
+}
+
 /* The focused row reads as a menu selection: white text on dark blue. */
 .resultRow:focus-visible,
 .resultRowCompact:focus-visible {

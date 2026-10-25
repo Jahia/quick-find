@@ -38,6 +38,10 @@ declare interface Window {
       jcrMainResourcesMaxResults?: number;
       /** Whether the URL reverse lookup feature is enabled. Default: true. */
       urlReverseLookupEnabled?: boolean;
+      /** Whether the sites table is enabled. Default: true. */
+      sitesEnabled?: boolean;
+      /** Max results shown in the sites table. Default: 3. */
+      sitesMaxResults?: number;
     };
     [key: string]: unknown;
   };
@@ -52,6 +56,7 @@ declare interface Window {
     routerHistory?: { push: (path: string) => void; [k: string]: unknown };
     reduxStore?: {
       dispatch: (action: unknown) => unknown;
+      getState?: () => unknown;
     };
     uiExtender?: {
       registry?: {

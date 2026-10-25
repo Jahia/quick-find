@@ -26,6 +26,7 @@ export default defineConfig({
             'cypress/e2e/quickFindSearchMatching.cy.ts',
             'cypress/e2e/quickFindUrlReverseLookup.cy.ts',
             'cypress/e2e/quickFindFeatures.cy.ts',
+            'cypress/e2e/quickFindSites.cy.ts',
             'cypress/e2e/quickFindMainResources.cy.ts',
             'cypress/e2e/quickFindMedia.cy.ts',
             'cypress/e2e/quickFindInteraction.cy.ts',

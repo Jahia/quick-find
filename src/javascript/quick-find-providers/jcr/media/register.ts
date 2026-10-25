@@ -14,7 +14,7 @@ import { createJcrSearchProvider } from "../jcrSearchProvider.ts";
 import { openContentEditor } from "../../providerUtils.ts";
 
 const mediaProvider: QuickFindProvider = {
-  priority: 20,
+  priority: 40,
   title: "search.jcrMedia.title",
   titleDefault: "Media",
   isEnabled: () => isProviderEnabled("jcrMediaEnabled"),

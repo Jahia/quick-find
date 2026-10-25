@@ -1,5 +1,5 @@
 {
-  "label": "QuickFind",
+  "label": "Quick Find",
   "search": {
     "placeholder": "Search…",
     "loading": "Searching…",
@@ -10,7 +10,7 @@
     },
     "modal": {
       "label": "Search",
-      "title": "Welcome to QuickFind",
+      "title": "Quick Find",
       "siteInfo": "Searching in {{site}}, {{language}}",
       "reportIssue": "Report bugs and improvements at https://github.com/Jahia/quick-find/issues",
       "keys": {
@@ -23,11 +23,16 @@
     },
     "empty": {
       "title": "Find anything.",
-      "hint": "Features, Full URLs, Pages, Full Page contents, Media, Documents - Just start typing ({{min}} chars min)."
+      "hint": "Sites, Features, Full URLs, Pages, Full Page contents, Media, Documents - Just start typing ({{min}} chars min)."
     },
     "noResults": {
       "title": "No results.",
       "hint": "Nothing matched \"{{q}}\". Try different keywords or check for typos."
+    },
+    "sites": {
+      "title": "Sites",
+      "chip": "Site",
+      "currentChip": "Current site"
     },
     "jcrMedia": {
       "title": "Media"
