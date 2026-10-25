@@ -11,6 +11,8 @@
             defaultDisplayedResults:${quickFindConfig['defaultDisplayedResults']},
             augmentedFindDelayInTypingToLaunchSearch:${quickFindConfig['augmentedFindDelayInTypingToLaunchSearch']},
             jcrFindDelayInTypingToLaunchSearch:${quickFindConfig['jcrFindDelayInTypingToLaunchSearch']},
+            sitesEnabled:${quickFindConfig['sitesEnabled']},
+            sitesMaxResults:${quickFindConfig['sitesMaxResults']},
             uiFeaturesEnabled:${quickFindConfig['uiFeaturesEnabled']},
             uiFeaturesMaxResults:${quickFindConfig['uiFeaturesMaxResults']},
             jcrMediaEnabled:${quickFindConfig['jcrMediaEnabled']},

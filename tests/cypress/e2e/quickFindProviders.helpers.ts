@@ -281,7 +281,10 @@ export const SITE_KEY = 'quick-find-test-site';
 
 const ensuredSites = new Set<string>();
 
-export const ensureSiteExists = (siteKey: string = SITE_KEY) =>
+// The default is the shared test site: English only, on the server name of the runtime config.
+export type SiteOptions = {locale?: string; languages?: string; serverName?: string};
+
+export const ensureSiteExists = (siteKey: string = SITE_KEY, options: SiteOptions = {}) =>
     cy.then(() => {
         const sitePath = `/sites/${siteKey}`;
         const runtimeConfig = getQuickFindTestRuntimeConfig();
@@ -308,8 +311,9 @@ export const ensureSiteExists = (siteKey: string = SITE_KEY) =>
             );
 
             createSite(siteKey, {
-                locale: 'en',
-                serverName: runtimeConfig.siteServerName,
+                locale: options.locale ?? 'en',
+                languages: options.languages,
+                serverName: options.serverName ?? runtimeConfig.siteServerName,
                 templateSet: 'quick-find-test-module'
             });
             enableModule('quick-find', siteKey);

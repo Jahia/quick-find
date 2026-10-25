@@ -33,9 +33,11 @@ A custom DOM event `quick-find:open-search` can also open the modal programmatic
 
 ## Search Sections
 
-The modal displays results in up to six sections, each powered by an independent search provider. Sections appear conditionally based on configuration and site capabilities.
+The modal displays results in up to seven sections, each powered by an independent search provider. Sections appear conditionally based on configuration and site capabilities.
 
 **Direct URL Match** — When the query looks like a URL (starts with `http://`, `https://`, `/`, or contains a domain pattern), QuickFind resolves it against Jahia's vanity URLs and JCR paths via a custom GraphQL endpoint. Returns one or more matching nodes if found.
+
+**Sites** — Lists the sites that match the query and that the user can open in jContent (`jContentAccess`), as the jContent site switcher does. The current site is shown but disabled. Enter switches jContent to the site, in the current language when the site has it, and in the default language of the site otherwise.
 
 **Features** — Filters Jahia's UI registry in memory (no network call) to surface admin routes, jContent apps, and jExperience menu items matching the query. Results are computed locally and appear instantly once the minimum character threshold is reached.
 
@@ -87,6 +89,8 @@ All settings are defined in the OSGi configuration file `org.jahia.pm.modules.qu
 | `defaultDisplayedResults`                  | 5       | Initial results per section before "Show more"      |
 | `augmentedFindDelayInTypingToLaunchSearch` | 300     | Debounce delay in ms (augmented search)             |
 | `jcrFindDelayInTypingToLaunchSearch`       | 300     | Debounce delay in ms (JCR fallback)                 |
+| `sitesEnabled`                             | true    | Show Sites section                                  |
+| `sitesMaxResults`                          | 3       | Max sites displayed initially                       |
 | `uiFeaturesEnabled`                        | true    | Show UI Features section                            |
 | `uiFeaturesMaxResults`                     | 2       | Max features displayed initially                    |
 | `jcrMediaEnabled`                          | true    | Show Media section                                  |

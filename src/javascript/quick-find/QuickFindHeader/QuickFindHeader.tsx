@@ -2,7 +2,7 @@
  * Sticky header for the QuickFind search panel.
  *
  * Layout:
- *   - Top row: "Welcome to QuickFind" title (left) + site/language info (right)
+ *   - Top row: "Quick Find" title (left) + site/language info (right)
  *   - Bottom row: search input with clear button
  *
  * Keyboard handling:
@@ -69,7 +69,7 @@ export const QuickFindHeader = ({
       <div className={s.header}>
           <div className={s.titleRow}>
               <Typography variant="title">
-                  {t("search.modal.title", "Welcome to QuickFind")}
+                  {t("search.modal.title", "Quick Find")}
               </Typography>
               <Typography variant="caption" className={s.siteInfo}>
                   {t("search.modal.siteInfo", "Searching in {{site}}, {{language}}", {

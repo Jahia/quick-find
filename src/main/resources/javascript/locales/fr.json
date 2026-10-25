@@ -10,18 +10,23 @@
     },
     "modal": {
       "label": "Recherche",
-      "title": "Bienvenue dans QuickFind",
+      "title": "Quick Find",
       "siteInfo": "Recherche dans {{site}}, {{language}}",
       "hint": "Appuyez sur Ctrl+K ou ⌘K pour ouvrir. Échap pour fermer. Naviguez avec la touche Tab. Entrée pour accéder. e pour modifier.",
       "reportIssue": "Signalez les bugs et propositions d'amélioration sur https://github.com/Jahia/quick-find/issues"
     },
     "empty": {
       "title": "Trouvez n'importe quoi.",
-      "hint": "Fonctionnalités, URLs complètes, Pages, Contenus pleine page, Médias, Documents - commencez à taper ({{min}} caractères min)."
+      "hint": "Sites, Fonctionnalités, URLs complètes, Pages, Contenus pleine page, Médias, Documents - commencez à taper ({{min}} caractères min)."
     },
     "noResults": {
       "title": "Aucun résultat.",
       "hint": "Aucun résultat pour « {{q}} ». Essayez d'autres mots-clés ou vérifiez l'orthographe."
+    },
+    "sites": {
+      "title": "Sites",
+      "chip": "Site",
+      "currentChip": "Site actuel"
     },
     "jcrMedia": {
       "title": "Médias"

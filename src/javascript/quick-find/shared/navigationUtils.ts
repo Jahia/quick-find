@@ -8,7 +8,15 @@ type JContentGotoPayload = {
   language: string;
   mode: string;
   path: string;
+  template?: string;
   params?: Record<string, unknown>;
+};
+
+/** The part of the jContent Redux state that the site switch reads. */
+type JContentState = {
+  site?: string;
+  language?: string;
+  jcontent?: { mode?: string };
 };
 
 type JContentUtils = {
@@ -92,7 +100,7 @@ export function pushParentNavigation(url: string): void {
  */
 export function pushRouteNavigation(path: string): void {
   // No stable app-shell API is documented for imperative route changes.
-  const routerHistory = window.parent.jahia?.routerHistory;
+  const routerHistory = getJahiaShell()?.routerHistory;
   if (routerHistory) {
     // Opportunistic bridge: use it only when this runtime-specific object exists.
     routerHistory.push(path);
@@ -102,12 +110,41 @@ export function pushRouteNavigation(path: string): void {
   }
 }
 
+/**
+ * The `jahia` object of the window that holds the jContent shell. The parent wins when it
+ * holds the shell. A Cypress runner puts the whole shell in a frame, and the parent of that
+ * frame is the runner, which holds no shell.
+ */
+function getJahiaShell(): Window["jahia"] {
+  return window.parent.jahia ?? window.jahia;
+}
+
 function getParentReduxStore(): {
   dispatch: (action: unknown) => unknown;
+  getState?: () => unknown;
 } | null {
   // This MFE runs in an iframe and relies on the parent jContent Redux store
   // for navigation and view-mode actions, so we bridge to it defensively.
-  return window.parent.jahia?.reduxStore ?? null;
+  return getJahiaShell()?.reduxStore ?? null;
+}
+
+function getParentReduxState(): JContentState | null {
+  try {
+    return (getParentReduxStore()?.getState?.() as JContentState) ?? null;
+  } catch (error) {
+    logNavigationDebug("Unable to read redux state", error);
+    return null;
+  }
+}
+
+/** The site jContent shows now, which follows a site switch done without a page reload. */
+export function getCurrentJContentSite(): string {
+  return getParentReduxState()?.site || getSiteKey();
+}
+
+/** The language jContent edits in now. */
+export function getCurrentJContentLanguage(): string {
+  return getParentReduxState()?.language || getSearchLanguage();
 }
 
 function dispatchParent(action: unknown): void {
@@ -304,4 +341,41 @@ export function locateInJContent(nodePath: string, nodeType?: string): void {
       payload: 2,
     });
   }
+}
+
+/**
+ * Switches jContent to another site the way its site switcher does (SiteSwitcher.jsx):
+ * the mode stays, the path is the last location jContent stored for that site and mode,
+ * and the side panel selection is cleared. Outside jContent there is no current mode,
+ * so the mode jContent stored for that site applies, else pages.
+ */
+export function switchJContentSite(site: string, language: string): void {
+  const mode =
+    getParentReduxState()?.jcontent?.mode ||
+    localStorage.getItem(`jcontent-previous-mode-${site}`) ||
+    "pages";
+  // A path outside the root of the mode resolves to that root in jContent.
+  const path =
+    localStorage.getItem(`jcontent-previous-location-${site}-${mode}`) ||
+    `/sites/${site}`;
+  const template =
+    localStorage.getItem(`jcontent-previous-template-${site}-${mode}`) || "";
+
+  const gotoPayload: JContentGotoPayload = {
+    site,
+    language,
+    mode,
+    path,
+    template,
+  };
+  logNavigationInfo("switchJContentSite resolved payload", gotoPayload);
+
+  if (!tryJContentGoto(gotoPayload)) {
+    pushRouteNavigation(
+      buildJContentRoutePath(gotoPayload) ??
+        `/jcontent/${site}/${language}/${mode}`,
+    );
+  }
+
+  dispatchParent({ type: "CM_SET_SIDE_PANEL_SELECTION", payload: null });
 }
