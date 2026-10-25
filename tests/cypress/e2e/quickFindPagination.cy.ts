@@ -13,7 +13,9 @@ import {
 
 describe('QuickFind pagination behavior', () => {
     const token = createTestToken();
-    const providerOrderQuery = `page models order ${token}`;
+    // Features keeps an entry whose label holds the whole query, so the query is the label of
+    // the Page models feature. The page and the media file seeded below hold both words too.
+    const providerOrderQuery = 'page models';
     const staleNoMatchQuery = `quick-find-stale-no-match-${token}`;
 
     before('Seed many pages', () => {
