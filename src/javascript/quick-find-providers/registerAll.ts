@@ -12,6 +12,7 @@
  * Third-party Jahia modules can register additional providers in their
  * own init callbacks — they don't need to modify this file.
  */
+import "./sites/register.ts";
 import "./features/register.ts";
 import "./urlReverseLookup/register.ts";
 import "./augmented/register.ts";
