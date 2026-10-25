@@ -46,7 +46,12 @@ export type SearchHit = {
   thumbnailUrl?: string | null;
   /** Shown but takes no action (e.g. the site jContent already shows). */
   isDisabled?: boolean;
+  /** Picks the tile of the row when `nodeType` cannot, as for a translated label. */
+  kind?: ResultKind;
 };
+
+/** The kinds of result row, each with its own tile. */
+export type ResultKind = "page" | "file" | "content" | "feature" | "site";
 
 export type ApolloClientInstance = ApolloClient<NormalizedCacheObject>;
 

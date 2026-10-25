@@ -72,6 +72,7 @@ export const ResultsSection = ({
           excerpt={hit.excerpt}
           thumbnailUrl={hit.thumbnailUrl}
           isDisabled={hit.isDisabled}
+          kind={hit.kind}
           rowIndex={index}
           tabIndex={0}
           onAction={() => onHitAction(hit)}
