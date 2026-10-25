@@ -6,6 +6,9 @@
   /* Width must live in this two-class selector: a single-class rule ties with
      moonstone's modal_full { width: 100% } and loses on source order. */
   width: min(800px, calc(100vw - 96px));
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 24px 64px var(--color-dark40), 0 2px 6px var(--color-dark20);
 }
 
 /* Moonstone gives the modal overlay no z-index while the collapsed primary nav
@@ -29,21 +32,47 @@
   overflow: hidden;
 }
 
+:global(.search-modal .moonstone-modalFooter) {
+  padding: var(--spacing-small) var(--spacing-medium);
+  color: var(--color-gray);
+  background-color: var(--color-gray_light_plain20);
+}
+
 .footerLayout {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
+  align-items: center;
+  gap: var(--spacing-small);
   width: 100%;
 }
 
-.footerHints {
+.keyHints {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.kbd {
+  display: inline-block;
+  min-width: 18px;
+  margin-right: var(--spacing-nano);
+  padding: 0 5px;
+  border: 1px solid var(--color-gray_light);
+  border-bottom-width: 2px;
+  border-radius: var(--radius);
+  color: var(--color-gray_dark);
+  background-color: var(--color-white);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 16px;
+  text-align: center;
 }
 
 .issueLink,
 .issueLink:visited {
-  color: var(--color-accent_dark);
+  color: var(--color-gray);
   text-decoration: underline;
   text-underline-offset: 2px;
 }

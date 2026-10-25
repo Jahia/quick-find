@@ -92,7 +92,12 @@ export const ResultsSection = ({
       data-quick-find-results-section={sectionKey}
       data-quick-find-results-section-key={sectionKey}
       >
-          <Typography variant="heading">{title}</Typography>
+          <div className={s.sectionTitle}>
+              <Typography variant="caption" weight="bold">{title}</Typography>
+              {hits.length > 0 && (
+              <Typography variant="caption">{hits.length}{hasMore ? "+" : ""}</Typography>
+          )}
+          </div>
 
           {loading && hits.length === 0 && (
           <Typography variant="body">

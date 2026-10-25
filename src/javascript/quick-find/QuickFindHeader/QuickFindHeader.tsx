@@ -68,7 +68,7 @@ export const QuickFindHeader = ({
   return (
       <div className={s.header}>
           <div className={s.titleRow}>
-              <Typography variant="title">
+              <Typography variant="caption" weight="bold" className={s.eyebrow}>
                   {t("search.modal.title", "Quick Find")}
               </Typography>
               <Typography variant="caption" className={s.siteInfo}>
@@ -80,6 +80,7 @@ export const QuickFindHeader = ({
           </div>
           <div ref={inputWrapperRef} data-quick-find-search-input-wrapper="true">
               <form
+          className={s.searchForm}
           role="search"
           data-quick-find-search-form="true"
           onSubmit={handleSubmit}
