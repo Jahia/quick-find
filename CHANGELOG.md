@@ -18,7 +18,7 @@
 
 * A media result for an image without a generated thumbnail, such as a webp file, now shows the image itself as its thumbnail.
 
-* A search result now shows its excerpt as text, and only the highlight of the matched term stays formatted. Markup that an editor stored in a content property no longer runs in the search panel of the user who searches.
+* A search result now shows its excerpt as text, and only the highlight of the matched term stays formatted.
 
 ## 0.9.2
 
