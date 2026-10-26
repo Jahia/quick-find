@@ -1,5 +1,25 @@
 # quick-find Changelog
 
+## 0.10.0
+
+### New Features
+
+* Changed the quick find result order, so pages and main resources now show above media.
+
+* Improved the quick find modal design, with an icon per result type, a clearer selected result and keyboard hints.
+
+* A new Sites section lists the sites that match the query and that the user can open in jContent. Enter on a site switches jContent to that site, in the current language when the site has it, and in the default language of the site otherwise. The current site is shown greyed out. The title of the quick find modal is now Quick Find. Settings of the quick find configuration now still apply after an upgrade that adds a new setting.
+
+### Bug Fixes
+
+* A long path now stays on one line in a result row and shows its end, and the full path appears on hover. The row title uses a smaller font.
+
+* The edit action now closes the quick find modal when it opens the content editor.
+
+* A media result for an image without a generated thumbnail, such as a webp file, now shows the image itself as its thumbnail.
+
+* A search result now shows its excerpt as text, and only the highlight of the matched term stays formatted.
+
 ## 0.9.2
 
 * The search icon in the primary navigation now shows the `CTRL+K` keyboard shortcut below the magnifying glass.
