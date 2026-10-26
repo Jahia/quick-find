@@ -23,11 +23,13 @@ import {
   FileContent,
   Page,
   Setting,
+  SiteWeb,
   Subdirectory,
   Tooltip,
   Typography,
 } from "@jahia/moonstone";
 import { useTranslation } from "react-i18next";
+import type { ResultKind } from "../../quick-find-providers/types.ts";
 import { getResultTitleMaxLength } from "../shared/configUtils.ts";
 import s from "./ResultCard.module.css";
 
@@ -36,10 +38,11 @@ const KIND_ICONS = {
   file: File,
   content: FileContent,
   feature: Setting,
-};
+  site: SiteWeb,
+} satisfies Record<ResultKind, unknown>;
 
 // The features provider sets a translated label as the type, with no namespace prefix.
-const getKind = (type: string): keyof typeof KIND_ICONS => {
+const getKind = (type: string): ResultKind => {
   if (type === "jnt:page") {
     return "page";
   }
@@ -58,6 +61,8 @@ type ResultCardProps = {
   readonly excerpt?: string | null;
   readonly thumbnailUrl?: string | null;
   readonly isDisabled?: boolean;
+  /** The tile of the row. Without it, the row derives one from `type`. */
+  readonly kind?: ResultKind;
   readonly rowIndex?: number;
   readonly tabIndex?: number;
   /** Called when the row is clicked or Enter is pressed. */
@@ -89,6 +94,7 @@ export const ResultCard = ({
   excerpt,
   thumbnailUrl,
   isDisabled = false,
+  kind,
   rowIndex,
   tabIndex = -1,
   onAction,
@@ -96,8 +102,8 @@ export const ResultCard = ({
 }: ResultCardProps) => {
   const { t } = useTranslation();
   const maxNameLength = getResultTitleMaxLength();
-  const kind = getKind(type);
-  const KindIcon = KIND_ICONS[kind];
+  const tileKind = kind ?? getKind(type);
+  const KindIcon = KIND_ICONS[tileKind];
 
   const handleRowKeyDown = (event: ReactKeyboardEvent<HTMLLIElement>) => {
     if (event.key === "Enter") {
@@ -123,6 +129,7 @@ export const ResultCard = ({
       data-quick-find-result
       data-quick-find-result-row="true"
       data-quick-find-result-index={rowIndex}
+      data-quick-find-result-kind={tileKind}
       className={`${excerpt ? s.resultRow : s.resultRowCompact}${isDisabled ? ` ${s.resultRowDisabled}` : ""}`}
       tabIndex={tabIndex}
       aria-disabled={isDisabled || undefined}
@@ -138,7 +145,7 @@ export const ResultCard = ({
             loading="lazy"
           />
         ) : (
-            <span className={`${s.typeTile} ${s[kind]}`} aria-hidden="true">
+            <span className={`${s.typeTile} ${s[tileKind]}`} aria-hidden="true">
                 <KindIcon width={22} height={22}/>
             </span>
         )}

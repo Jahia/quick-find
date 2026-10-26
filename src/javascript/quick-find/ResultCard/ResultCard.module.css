@@ -89,6 +89,11 @@
   background-color: var(--color-gray_light_plain40);
 }
 
+.site {
+  color: var(--color-success_dark);
+  background-color: var(--color-success_plain20);
+}
+
 /* Moonstone has no light warning tint, so the feature tile uses literal amber values. */
 .feature {
   color: #8a6500;

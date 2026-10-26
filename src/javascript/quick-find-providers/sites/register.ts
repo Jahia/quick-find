@@ -80,6 +80,7 @@ function siteToSearchHit(site: GqlSiteNode, currentSite: string): SearchHit {
       ? i18n.t("search.sites.currentChip", "Current site")
       : i18n.t("search.sites.chip", "Site"),
     isDisabled: isCurrent,
+    kind: "site",
   };
 }
 
