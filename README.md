@@ -83,6 +83,8 @@ The ability to extend QuickFind with additional providers from third-party modul
 
 All settings are defined in the OSGi configuration file `org.jahia.pm.modules.quickfind.cfg` and injected at runtime into `window.contextJsParameters.quickFind` via a JSP.
 
+A `*Enabled` property takes `true` or `false`, and every other property takes a non-negative integer. quick-find ignores a value of another form: it uses the default of that property and logs a warning that names it.
+
 | Property                                   | Default | Description                                         |
 | ------------------------------------------ | ------- | --------------------------------------------------- |
 | `minSearchChars`                           | 3       | Minimum searchable characters (letters, digits, `_`) before search fires |
