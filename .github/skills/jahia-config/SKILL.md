@@ -71,6 +71,7 @@ Key rules:
 - Use `${functions:getConfigValues('...')}` — the JSTL function that reads the OSGi config.
 - Always wrap with `<c:choose>` and emit `console.warn` in the `<c:otherwise>` branch so failures are visible in the browser console.
 - The JSP writes directly to `contextJsParameters` (already available as a global object on the page) — do **not** use `var` or `window.`.
+- The example above prints each value raw, so one malformed value (`3a`, `True`) is a script error that drops the whole object. Check each value against the form of its key before it is printed, print `undefined` otherwise, and log a warning that names the key. `src/main/resources/configs/quickFind.jsp` does it.
 
 ---
 

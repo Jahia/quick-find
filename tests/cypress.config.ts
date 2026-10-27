@@ -32,6 +32,7 @@ export default defineConfig({
             'cypress/e2e/quickFindInteraction.cy.ts',
             'cypress/e2e/quickFindPages.cy.ts',
             'cypress/e2e/quickFindPagination.cy.ts',
+            'cypress/e2e/quickFindConfiguration.cy.ts',
             'cypress/e2e/quickFindZTeardown.cy.ts'
         ],
         excludeSpecPattern: '*.ignore.ts',
