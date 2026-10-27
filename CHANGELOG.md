@@ -1,5 +1,9 @@
 # quick-find Changelog
 
+## 0.10.1
+
+* Fixed quick find so one malformed setting, such as `minSearchChars = 3a`, no longer disables all the other settings. Quick find uses the default of that setting and logs a warning that names it.
+
 ## 0.10.0
 
 ### New Features
