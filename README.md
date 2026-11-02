@@ -29,6 +29,8 @@ React 18 + TypeScript, bundled with Vite 7 and Module Federation (`@jahia/vite-f
 | Go to selected result | **Enter**               |
 | Edit selected result  | **E**                   |
 
+⌘K and Ctrl+K also work on a keyboard layout without Latin letters, such as Russian or Greek: quick find then reads the key at the position of K.
+
 A custom DOM event `quick-find:open-search` can also open the modal programmatically (used by the nav search button).
 
 ## Search Sections
