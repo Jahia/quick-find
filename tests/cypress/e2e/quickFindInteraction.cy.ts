@@ -1,13 +1,28 @@
 import {
+    closeSearchModal,
     createPageViaGraphql,
     createTestToken,
+    LONG_TIMEOUT,
     MEDIUM_TIMEOUT,
+    openSearchModal,
     RESULT_ROW_SELECTOR,
     SEARCH_INPUT_SELECTOR,
     searchInModal,
     SITE_KEY,
     visitQuickFindSiteInJContent
 } from './quickFindProviders.helpers';
+
+// The test browser cannot switch its keyboard layout, so a synthetic keydown on the document
+// carries the key and the code that the layout would send. Opening and closing the modal first
+// proves that QuickFindModal attached its listeners.
+const pressCtrlOnKey = (key: string, code: string) => {
+    cy.document().trigger('keydown', {key, code, ctrlKey: true});
+};
+
+const armShortcut = () => {
+    openSearchModal();
+    closeSearchModal();
+};
 
 describe('QuickFind keyboard interaction', () => {
     const token = createTestToken();
@@ -58,5 +73,25 @@ describe('QuickFind keyboard interaction', () => {
 
         cy.realPress(['Shift', 'Tab']);
         cy.focused().should('match', SEARCH_INPUT_SELECTOR);
+    });
+
+    it('opens the modal with Ctrl+K on a layout without Latin letters', () => {
+        armShortcut();
+
+        // A Russian layout types "л" on the K key.
+        pressCtrlOnKey('л', 'KeyK');
+
+        cy.get(SEARCH_INPUT_SELECTOR, {timeout: LONG_TIMEOUT}).should('be.visible');
+    });
+
+    it('matches the K that a Latin layout types, and not the K position', () => {
+        armShortcut();
+
+        // Dvorak types "t" at the KeyK position and "k" at the KeyV position. Ctrl+K toggles the
+        // modal, so the modal is open only when the first press did nothing.
+        pressCtrlOnKey('t', 'KeyK');
+        pressCtrlOnKey('k', 'KeyV');
+
+        cy.get(SEARCH_INPUT_SELECTOR, {timeout: LONG_TIMEOUT}).should('be.visible');
     });
 });
