@@ -1,5 +1,9 @@
 # quick-find Changelog
 
+## 0.11.0
+
+* Fixed locating a media from quick find, so jContent now shows the media selected, on the right page of its folder. A file at the root of the media folder now opens that folder instead of a wrong location.
+
 ## 0.10.1
 
 * Fixed quick find so one malformed setting, such as `minSearchChars = 3a`, no longer disables all the other settings. Quick find uses the default of that setting and logs a warning that names it.
