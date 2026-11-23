@@ -621,14 +621,30 @@ export const removeThumbnailViaGraphql = (siteKey: string, fileName: string) => 
     });
 };
 
-export const createMediaViaGraphql = (siteKey: string, fileName: string, mimeType = 'text/plain') =>
+const createMediaUnder = (siteKey: string, parentPath: string, fileName: string, mimeType: string) =>
     ensureSiteExists(siteKey).then(() =>
         ensureMediaRoot(siteKey).then(() =>
-            uploadFile(`/sites/${siteKey}/files`, fileName, mimeType).then((result: GraphQLResult) => {
+            uploadFile(parentPath, fileName, mimeType).then((result: GraphQLResult) => {
                 assertNoGraphQLErrors(result, 'GraphQL errors while creating media');
                 expect(result?.data?.jcr?.addNode?.uuid, 'created media uuid').to.be.a('string');
                 return result;
             })
+        )
+    );
+
+export const createMediaViaGraphql = (siteKey: string, fileName: string, mimeType = 'text/plain') =>
+    createMediaUnder(siteKey, `/sites/${siteKey}/files`, fileName, mimeType);
+
+// The folder is one that createMediaFolderViaGraphql created in the media root.
+export const createMediaInFolderViaGraphql = (siteKey: string, folderName: string, fileName: string) =>
+    createMediaUnder(siteKey, `/sites/${siteKey}/files/${folderName}`, fileName, 'text/plain');
+
+export const createMediaFolderViaGraphql = (siteKey: string, folderName: string) =>
+    ensureSiteExists(siteKey).then(() =>
+        ensureMediaRoot(siteKey).then(() =>
+            addNode({parentPathOrId: `/sites/${siteKey}/files`, name: folderName, primaryNodeType: 'jnt:folder'}).then(
+                (result: GraphQLResult) => assertNoGraphQLErrors(result, 'GraphQL errors while creating a media folder')
+            )
         )
     );
 

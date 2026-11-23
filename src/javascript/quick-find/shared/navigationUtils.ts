@@ -2,6 +2,10 @@
  * Jahia context resolution and jContent SPA navigation helpers.
  */
 import { registry } from "@jahia/ui-extender";
+import {
+  findJContentMediaPage,
+  type JContentSort,
+} from "./jcontentMediaPage.ts";
 
 type JContentGotoPayload = {
   site: string;
@@ -12,12 +16,23 @@ type JContentGotoPayload = {
   params?: Record<string, unknown>;
 };
 
-/** The part of the jContent Redux state that the site switch reads. */
+/** The part of the jContent Redux state that the site switch and the media locate read. */
 type JContentState = {
   site?: string;
   language?: string;
-  jcontent?: { mode?: string };
+  jcontent?: {
+    mode?: string;
+    sort?: JContentSort;
+    pagination?: { pageSize?: number };
+  };
 };
+
+/** The initial sort and page size of jContent, for a state that cannot be read. */
+const DEFAULT_JCONTENT_SORT: JContentSort = {
+  order: "DESC",
+  orderBy: "lastModified.value",
+};
+const DEFAULT_JCONTENT_PAGE_SIZE = 25;
 
 type JContentUtils = {
   buildUrl?: (data: {
@@ -234,6 +249,8 @@ function setPageBuilderViewMode(): void {
  * setting localStorage (read by extractParamsFromUrl on URL change) and
  * dispatching SET_TABLE_VIEW_MODE to Redux so jContent's store listener
  * does not overwrite localStorage with the stale viewMode after navigation.
+ *
+ * A media opens its folder on the page that lists it, selected there.
  */
 export function locateInJContent(nodePath: string, nodeType?: string): void {
   const site = getSiteKey();
@@ -247,7 +264,7 @@ export function locateInJContent(nodePath: string, nodeType?: string): void {
 
   let mode: string;
   let jcontentPath: string;
-  let mediaPreviewPath: string | null = null;
+  let mediaPath: string | null = null;
 
   const normalizedNodeType = nodeType?.toLowerCase() ?? "";
   const isMediaNodeType =
@@ -256,14 +273,16 @@ export function locateInJContent(nodePath: string, nodeType?: string): void {
   if (parentPath.startsWith(`${siteBase}/files`) || isMediaNodeType) {
     mode = "media";
     // Navigate to the parent folder so the file is visible in the listing.
+    // A file right under the files root has that root as its folder.
     const filesRoot = `${siteBase}/files`;
     const lastSlash = parentPath.lastIndexOf("/");
     const folderPath =
-      lastSlash > filesRoot.length
+      lastSlash >= filesRoot.length
         ? parentPath.substring(0, lastSlash)
         : parentPath;
     jcontentPath = folderPath;
-    mediaPreviewPath = nodePath;
+    // The files root is no row of a list, so it has nothing to select.
+    mediaPath = folderPath === nodePath ? null : nodePath;
   } else if (parentPath.startsWith(`${siteBase}/contents`)) {
     mode = "content-folders";
     jcontentPath = parentPath;
@@ -289,6 +308,57 @@ export function locateInJContent(nodePath: string, nodeType?: string): void {
     jcontentPath,
   });
 
+  if (mediaPath) {
+    locateMediaInJContent(gotoPayload, mediaPath).catch((error) =>
+      logNavigationDebug("Unable to locate the media", error),
+    );
+    return;
+  }
+
+  navigateInJContent(gotoPayload);
+
+  // Reuse jContent reducer action to force Page Builder mode.
+  if (mode === "pages" || mode === "content-folders") {
+    setPageBuilderViewMode();
+  }
+}
+
+/**
+ * Opens the folder of a media on the page that lists it, and selects the media, as
+ * jContent's own Locate action does. jContent opens the side panel of a selection only
+ * when the selection is a row of the page it shows.
+ */
+async function locateMediaInJContent(
+  gotoPayload: JContentGotoPayload,
+  mediaPath: string,
+): Promise<void> {
+  const jcontentState = getParentReduxState()?.jcontent;
+  let page = 0;
+  try {
+    page = await findJContentMediaPage({
+      folderPath: gotoPayload.path,
+      mediaPath,
+      language: gotoPayload.language,
+      displayLanguage: getUiLanguage(),
+      sort: jcontentState?.sort ?? DEFAULT_JCONTENT_SORT,
+      pageSize:
+        jcontentState?.pagination?.pageSize ?? DEFAULT_JCONTENT_PAGE_SIZE,
+    });
+  } catch (error) {
+    logNavigationDebug("Unable to find the page of the media", error);
+  }
+
+  navigateInJContent(gotoPayload);
+
+  // A route change takes jContent back to the first page, so the page comes after it.
+  logNavigationInfo("select media dispatch", { page, mediaPath });
+  dispatchParent({ type: "CM_SET_PAGE", payload: page });
+  dispatchParent({ type: "CM_SET_SIDE_PANEL_SELECTION", payload: mediaPath });
+}
+
+function navigateInJContent(gotoPayload: JContentGotoPayload): void {
+  const { site, language, mode, path } = gotoPayload;
+
   // Reuse jContent's own redux navigation action when available.
   const navigatedWithJContent = tryJContentGoto(gotoPayload);
   if (navigatedWithJContent) {
@@ -307,7 +377,7 @@ export function locateInJContent(nodePath: string, nodeType?: string): void {
       pushRouteNavigation(builtPath);
     } else {
       // Last resort fallback if jContent registry entries are unavailable.
-      const fallbackPath = jcontentPath.replace(siteBase, "") || "/";
+      const fallbackPath = path.replace(`/sites/${site}`, "") || "/";
       const encodedPath = fallbackPath.replace(/[^/]/g, encodeURIComponent);
       logNavigationInfo("navigation strategy", {
         strategy: "manual-fallback",
@@ -317,29 +387,6 @@ export function locateInJContent(nodePath: string, nodeType?: string): void {
         `/jcontent/${site}/${language}/${mode}${encodedPath}`,
       );
     }
-  }
-
-  // Reuse jContent reducer action to force Page Builder mode.
-  if (mode === "pages" || mode === "content-folders") {
-    setPageBuilderViewMode();
-  }
-
-  // For media files: open jContent's preview drawer for the located file.
-  // CM_DRAWER_STATES.SHOW = 2 (from jcontent redux/JContent.redux.js)
-  if (mediaPreviewPath) {
-    logNavigationInfo("open preview dispatch", {
-      selectionAction: "CM_SET_PREVIEW_SELECTION",
-      stateAction: "CM_SET_PREVIEW_STATE",
-      previewPath: mediaPreviewPath,
-    });
-    dispatchParent({
-      type: "CM_SET_PREVIEW_SELECTION",
-      payload: mediaPreviewPath,
-    });
-    dispatchParent({
-      type: "CM_SET_PREVIEW_STATE",
-      payload: 2,
-    });
   }
 }
 
