@@ -254,7 +254,7 @@ function setPageBuilderViewMode(): void {
  */
 export function locateInJContent(nodePath: string, nodeType?: string): void {
   const site = getSiteKey();
-  const language = getUiLanguage();
+  const language = getCurrentJContentLanguage();
   const siteBase = `/sites/${site}`;
 
   let parentPath = nodePath;
