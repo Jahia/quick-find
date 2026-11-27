@@ -58,7 +58,7 @@ Providers are framework-agnostic (no React hooks). They expose imperative factor
 
 ### Module Federation
 
-Vite builds with `@jahia/vite-federation-plugin`. Exposes `./init` entry. The plugin auto-shares **every** `dependencies` key as a singleton; the explicit `shared` block in `vite.config.ts` replaces those entries per key. Nine libraries ship as shared singletons, seven of them advertised as `version: "0.0.0"` so quick-find loses a contested election. `@jahia/moonstone` (2.19.0) and `@jahia/ui-extender` (1.2.0) are **not** covered by that guard. See `HANDOFF_RUNTIME_ISSUE.md`.
+Vite builds with `@jahia/vite-federation-plugin` 0.2, which reads `package.json` as the federation manifest. Exposes `./init` entry. `peerDependencies` lists the singletons of app-shell 4 (`react`, `react-dom`, `i18next`, `react-i18next`, `@jahia/ui-extender`): the module imports the copy of app-shell and bundles none. `devDependencies` holds a copy of each at the version app-shell 4.0.0 provides, for the build and the types. `dependencies` (`@apollo/client`, `@jahia/moonstone`, `graphql`) are bundled and shared pooled. The build fails on a library in the wrong section. The module requires `app-shell=4.0` in `pom.xml`.
 
 ### Java Backend
 
@@ -85,7 +85,7 @@ Default config in `src/main/resources/META-INF/configurations/org.jahia.pm.modul
 
 ## Known Issues
 
-**Runtime crash (RESOLVED)**: Was caused by singleton version negotiation tie-breaking — quick-find declared the same React version as the host, winning the tie and providing its own React instance to all consumers. Mitigated by setting `version: "0.0.0"` for seven of the nine shared singletons in `vite.config.ts`. Election is loaded-first then highest, so this is a mitigation, not a guarantee. See `HANDOFF_RUNTIME_ISSUE.md` for full investigation history and fix details.
+**Runtime crash (RESOLVED)**: Was caused by singleton version negotiation tie-breaking — quick-find shipped its own React, won the election, and provided it to all consumers. Since `@jahia/vite-federation-plugin` 0.2, a peer dependency is imported from app-shell and never bundled, so quick-find has no copy that can win. See `HANDOFF_RUNTIME_ISSUE.md` for the investigation history.
 
 ## AI Skills
 

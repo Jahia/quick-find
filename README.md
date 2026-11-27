@@ -17,7 +17,7 @@ A Spotlight-style search modal for [Jahia CMS](https://www.jahia.com/) that lets
 
 ## Stack
 
-React 18 + TypeScript, bundled with Vite 7 and Module Federation (`@jahia/vite-federation-plugin`). GraphQL queries run through Apollo Client 3 against Jahia's backend. The UI is built with [@jahia/moonstone](https://github.com/Jahia/moonstone) and styled with CSS Modules. Internationalization uses react-i18next (English, French, German). The module is packaged as an OSGi bundle via Maven.
+React 18 + TypeScript, bundled with Vite 8 and Module Federation (`@jahia/vite-federation-plugin`). GraphQL queries run through Apollo Client 3 against Jahia's backend. The UI is built with [@jahia/moonstone](https://github.com/Jahia/moonstone) and styled with CSS Modules. Internationalization uses react-i18next (English, French, German). The module is packaged as an OSGi bundle via Maven.
 
 ## Keyboard Shortcuts
 

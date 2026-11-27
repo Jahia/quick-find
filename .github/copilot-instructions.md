@@ -6,7 +6,7 @@ Jahia OSGi module (primarily frontend, with a lightweight Java GraphQL extension
 
 ## Stack
 
-- **React 18** + **TypeScript 5.9**, bundled with **Vite 7** (Module Federation via `@jahia/vite-federation-plugin`)
+- **React 18** + **TypeScript 5.9**, bundled with **Vite 8** (Module Federation via `@jahia/vite-federation-plugin`)
 - **Apollo Client 3** for GraphQL queries
 - **@jahia/moonstone** design system (custom local build, non-singleton)
 - **react-i18next** for i18n (namespace `QuickFind`, locales: en/fr/de)
