@@ -1,5 +1,13 @@
 # quick-find Changelog
 
+## 0.12.0
+
+* Changed the module to require jContent 3.8.1 or later, so it refuses to start with an earlier jContent.
+
+* Changed the module to declare that it requires app-shell 4.0 or later, which every Jahia 8.2.2 or later can run. Its interface never loaded on an earlier app-shell; the module now refuses to start there instead.
+
+* Fixed search results so they open in the language you edit in jContent, not in the language of the interface.
+
 ## 0.11.0
 
 * Fixed locating a media from quick find, so jContent now shows the media selected, on the right page of its folder. A file at the root of the media folder now opens that folder instead of a wrong location.
