@@ -23,6 +23,17 @@ function logModalDebug(message: string, error: unknown): void {
   console.debug(`[quick-find][modal] ${message}`, error);
 }
 
+// `e.key` is the character the active layout types. A layout without Latin letters, such as
+// Russian, types "л" on the K key, so the position of the key (`e.code`) stands in for a
+// character that is not a Latin letter. Shift stays excluded, as "K" excludes it on a Latin layout.
+function isKeyK(e: KeyboardEvent): boolean {
+  if (e.key === "k") {
+    return true;
+  }
+
+  return !e.shiftKey && !/^[a-z]$/i.test(e.key) && e.code === "KeyK";
+}
+
 export const QuickFindModal = () => {
   const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
@@ -36,7 +47,7 @@ export const QuickFindModal = () => {
   // shortcut works regardless of which frame has focus.
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
+      if (isKeyK(e) && (e.metaKey || e.ctrlKey)) {
         e.preventDefault();
         setIsOpen((prev) => !prev);
       }
